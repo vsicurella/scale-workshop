@@ -23,7 +23,7 @@ import {
 } from './helpers/converters.js'
 import { rotateArrayLeft, rotateArrayRight, getCoprimes } from './helpers/sequences.js'
 import { setKeyColors, parseTuningData, parseUrl, clearAll, model, synth } from './scaleworkshop.js'
-import { importScalaScl, importAnamarkTun } from './helpers/importers.js'
+import { importScalaScl, importAnamarkTun, importMnlgtun } from './helpers/importers.js'
 import { closestPrime } from './helpers/numbers.js'
 import { touchKbdOpen, touchKbdClose } from './ui.js'
 import { isQueryActive } from './synth.js'
@@ -135,6 +135,12 @@ function initEvents() {
   jQuery('#import-anamark-tun').on('click', function(event) {
     event.preventDefault()
     importAnamarkTun()
+  })
+
+  // import mnlgtun option clicked
+  jQuery('#import-mnlgtun-file').on('click', function(event) {
+    event.preventDefault()
+    importMnlgtun()
   })
 
   // generateEqualTemperament option clicked

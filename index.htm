@@ -123,6 +123,11 @@
                                     <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Import .tun
                                 </a>
                             </li>
+                            <li>
+                                <a href="#" id="import-mnlgtun-file">
+                                    <span class="glyphicon glyphicon-log-in" aria-hidden="true"></span> Import .mnlgtuns / .mnlgtuno
+                                </a>
+                            </li>
                             <li class="divider"></li>
                             <li>
                                 <a href="#" id="load-preset">
@@ -187,16 +192,20 @@
                                         aria-hidden="true"></span> Download Scala Scale (.scl)</a></li>
                             <li><a href="#scala-kbm"><span class="glyphicon glyphicon-download"
                                         aria-hidden="true"></span> Download Scala Mapping (.kbm)</a></li>
+                            <li class="divider"></li>
                             <li><a href="#maxmsp-coll"><span class="glyphicon glyphicon-download"
                                         aria-hidden="true"></span> Download Max/MSP coll Tuning (.txt)</a></li>
-                            <li><a href="#pd-text"><span class="glyphicon glyphicon-download" aria-hidden="true"></span>
-                                    Download PureData text Tuning (.txt)</a></li>
+                            <li><a href="#pd-text"><span class="glyphicon glyphicon-download"
+                                        aria-hidden="true"></span> Download PureData text Tuning (.txt)</a></li>
                             <li><a href="#kontakt-script"><span class="glyphicon glyphicon-download"
                                         aria-hidden="true"></span> Download Kontakt Tuning Script (.txt)</a></li>
+                            <li><a href="#mnlgtun-scale"><span class="glyphicon glyphicon-download"
+                                        aria-hidden="true"></span> Download Korg 'logue Sound Librarian Scale (.mnlgtuns)</a></li>
+                            <li><a href="#mnlgtun-octave"><span class="glyphicon glyphicon-download"
+                                        aria-hidden="true"></span> Download Korg 'logue Sound Librarian Octave (.mnlgtuno)</a></li>
                             <li class="divider"></li>
                             <li><a href="#deflemask-reference"><span class="glyphicon glyphicon-download"
-                                        aria-hidden="true"></span> Download Deflemask 'fine tune' reference (.txt)</a>
-                            </li>
+                                        aria-hidden="true"></span> Download Deflemask 'fine tune' reference (.txt)</a></li>
                             <li class="divider"></li>
                             <li><a href="#url"><span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
                                     Share scale as URL</a></li>
@@ -470,10 +479,11 @@
             </div><!-- /col -->
         </div><!-- /.row -->
     </div><!-- /.container-fluid -->
-    <!-- Hidden by default -->
+
+    <!-- FileUpload objects, hidden by default -->
     <input type="file" id="scala-file" accept=".scl" style="display:none;" />
     <input type="file" id="anamark-tun-file" accept=".tun" style="display:none;" />
-
+    <input type="file" id="mnlgtun-file" accept=".mnlgtuns,.mnlgtuno" style="display:none;" />
 
 
     <!-- Generator Modals -->
@@ -888,6 +898,7 @@
     <script src="src/lib/jquery-ui-1.12.1/external/jquery/jquery.js"></script>
     <script src="src/lib/jquery-ui-1.12.1/jquery-ui.min.js"></script>
     <script src="src/lib/eventemitter3.js"></script>
+    <script src="src/lib/jszip.min.js"></script>
 
     <!-- Scale Workshop scripts -->
     <script type="module" src="src/js/helpers/Model.js"></script>

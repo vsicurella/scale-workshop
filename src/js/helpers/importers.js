@@ -29,4 +29,12 @@ function importAnamarkTun() {
   }
 }
 
-export { importAnamarkTun, importScalaScl }
+function importMnlgtun() {
+  // check File API is supported
+  if (isFileApiSupported()) {
+    // trigger load file dialog
+    jQuery('#mnlgtun-file').trigger('click')
+  }
+}
+
+export { importAnamarkTun, importScalaScl, importMnlgtun }

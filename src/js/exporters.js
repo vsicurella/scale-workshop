@@ -328,6 +328,17 @@ function exportReferenceDeflemask() {
   return true
 }
 
+function exportMnlgtun(useScaleFormat) {
+  // This exporter converts tuning data into a zip-compressed file for use with Korg's
+  // 'logue Sound Librarian software, supporting their 'logue series of synthesizers.
+  // While this exporter preserves accuracy as much as possible, the Sound Librarian software
+  // unforunately truncates cent values to 1 cent precision. It's unknown whether the tuning accuracy
+  // from this exporter is written to the synthesizer.
+
+  // success
+  return true
+}
+
 function getScaleUrl() {
   const url = new URL(window.location.href)
   const protocol = !isEmpty(url.protocol) ? url.protocol + '//' : 'http://'
@@ -417,5 +428,6 @@ export {
   exportPdText,
   exportKontaktScript,
   exportReferenceDeflemask,
+  exportMnlgtun,
   exportUrl
 }
