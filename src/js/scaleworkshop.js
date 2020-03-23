@@ -20,9 +20,19 @@ import {
   sanitizeFilename,
   stepsToDegrees,
   degreesToSteps,
-  degreeModPeriodCents
+  degreeModPeriodCents,
+  mnlgBinaryToCents
 } from './helpers/converters.js'
-import { LINE_TYPE, TUNING_MAX_SIZE, UNIX_NEWLINE, NEWLINE_REGEX, LOCALSTORAGE_PREFIX, PRIMES } from './constants.js'
+import {
+  LINE_TYPE,
+  TUNING_MAX_SIZE,
+  UNIX_NEWLINE,
+  NEWLINE_REGEX,
+  LOCALSTORAGE_PREFIX,
+  PRIMES,
+  MNLG_MAXCENTS,
+  MNLG_A440
+} from './constants.js'
 import {
   getScaleUrl,
   updatePageUrl,

@@ -4,7 +4,7 @@
 
 /* global alert, jQuery */
 
-import { LINE_TYPE, SEMITONE_RATIO_IN_12_EDO } from '../constants.js'
+import { LINE_TYPE, SEMITONE_RATIO_IN_12_EDO, MNLG_MAXCENTS } from '../constants.js'
 import { model } from '../scaleworkshop.js'
 import { isNil } from './general.js'
 import { isCommaDecimal, isRatio, getLineType } from './types.js'
@@ -226,10 +226,42 @@ function degreeModPeriod(degree) {
   return mathModulo(degree, model.get('tuning table').noteCount - 1)
 }
 
-// converts any scale degree into a period-reduced cent value 
+// converts any scale degree into a period-reduced cent value
 function degreeModPeriodCents(degree) {
   const tuningTable = model.get('tuning table')
   return tuningTable.cents[degreeModPeriod(degree) + tuningTable.baseMidiNote]
+}
+
+// converts a cents value into a binary string for the mnlgtun exporter
+function centsToMnlgBinary(centsIn) {
+  // restrict to valid values
+  let cents = centsIn
+  if (cents < 0) cents = 0
+  else if (cents >= MNLG_MAXCENTS) cents = MNLG_MAXCENTS
+
+  const semitones = parseInt(cents) / 100.0
+  const hundreds = Math.floor(semitones)
+
+  const tens = semitones - hundreds
+  const u16a = new Uint16Array([Math.round(0x8000 * tens)])
+  const u8a = new Uint8Array(u16a.buffer)
+
+  return String.fromCharCode(hundreds) + String.fromCharCode(u8a[1]) + String.fromCharCode(u8a[0])
+}
+
+// converts a mnlgtun binary string into an array of cents
+function mnlgBinaryToCents(binaryData) {
+  const centsOut = []
+  const tuningSize = binaryData.length / 3
+  for (let i = 0; i < tuningSize; i++) {
+    const str = binaryData.slice(i * 3, i * 3 + 3)
+
+    const hundreds = str.charCodeAt(0) * 100
+    let tens = new Uint8Array([str.charCodeAt(2), str.charCodeAt(1)])
+    tens = Math.trunc((parseInt(new Uint16Array(tens.buffer)) / 0x8000) * 100)
+    centsOut.push(hundreds + tens)
+  }
+  return centsOut
 }
 
 export {
@@ -253,5 +285,7 @@ export {
   sanitizeFilename,
   midiNoteNumberToName,
   degreeModPeriod,
-  degreeModPeriodCents
+  degreeModPeriodCents,
+  centsToMnlgBinary,
+  mnlgBinaryToCents
 }

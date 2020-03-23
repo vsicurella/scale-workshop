@@ -2,8 +2,17 @@
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/converters.js'
-import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBin } from './helpers/converters.js'
+import {
+  LINE_TYPE,
+  MNLG_OCTAVESIZE,
+  MNLG_SCALESIZE,
+  MNLG_A440,
+  APP_TITLE,
+  TUNING_MAX_SIZE,
+  UNIX_NEWLINE,
+  WINDOWS_NEWLINE
+} from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
 
