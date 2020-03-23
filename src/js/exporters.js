@@ -1,7 +1,7 @@
 /* global alert, MouseEvent, history, jQuery */
 
 import { model, synth } from './scaleworkshop.js'
-import { isNil } from './helpers/general.js'
+import { isNil, roundToNDecimals } from './helpers/general.js'
 import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBinary } from './helpers/converters.js'
 import {
   LINE_TYPE,
@@ -354,13 +354,13 @@ function exportMnlgtun(useScaleFormat) {
   const baseOffsetValue = MNLG_A440 + decimalToCents(baseFreq / 440)
 
   // build cents array for binary conversion
-  let centsTable = tuningTable.freq.map(f => decimalToCents(f / baseFreq) + baseOffsetValue)
+  let centsTable = tuningTable.freq.map(f => roundToNDecimals(6, decimalToCents(f / baseFreq) + baseOffsetValue))
 
   let binaryString = ""
   
   // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
   if (!useScaleFormat) {
-    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
+    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => 6, c - centsTable[0])
   // ensure table legth is exactly 128
   } else {
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
@@ -375,6 +375,10 @@ function exportMnlgtun(useScaleFormat) {
   centsTable.forEach(c => {
     binaryString += centsToMnlgBinary(c)
   })
+
+  console.log(centsTable)
+  console.log('=====>')
+  console.log(binaryString)
 
   // prepare files for zipping
   const dir = 'src/assets/txt/mnlgtun'
@@ -396,7 +400,7 @@ function exportMnlgtun(useScaleFormat) {
       })
       .then( () => {
               zip.generateAsync({type:"base64"}).then((base64) => {
-                 saveFile(filename, base64)
+                saveFile(filename, base64, 'application/zip;base64,')
               }, (err) => alert(err) )
       })
   })
