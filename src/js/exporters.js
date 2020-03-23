@@ -2,7 +2,7 @@
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBin } from './helpers/converters.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBin, mnlgBinaryToCents } from './helpers/converters.js'
 import {
   LINE_TYPE,
   MNLG_OCTAVESIZE,
@@ -342,7 +342,64 @@ function exportMnlgtun(useScaleFormat) {
   // 'logue Sound Librarian software, supporting their 'logue series of synthesizers.
   // While this exporter preserves accuracy as much as possible, the Sound Librarian software
   // unforunately truncates cent values to 1 cent precision. It's unknown whether the tuning accuracy
-  // from this exporter is written to the synthesizer.
+  // from this exporter is written to the synthesizer and used in the synthesis.
+
+  if (exportError()) {
+    return
+  }
+
+  const tuningTable = model.get('tuning table')
+  const baseFreq = tuningTable.baseFrequency
+  // the index of the scale dump that's equal to the baseNote should have the following value
+  const baseOffsetValue = MNLG_A440 + decimalToCents(baseFreq / 440)
+
+  // build cents array for binary conversion
+  let centsTable = tuningTable.freq.map(f => decimalToCents(f / baseFreq) + baseOffsetValue)
+
+  let binaryString = ""
+  
+  // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
+  if (!useScaleFormat) {
+    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
+  // ensure table legth is exactly 128
+  } else {
+    centsTable = centsTable.slice(0, MNLG_SCALESIZE)
+    // this shouldn't happen unless there are big changes to SW or something goes really wrong
+    if (centsTable.length != MNLG_SCALESIZE) {
+      const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
+      centsTable = [...centsTable, ...padding]
+    }
+  }
+
+  // convert to binary
+  centsTable.forEach(c => {
+    binaryString += centsToMnlgBin(c)
+  })
+
+  // prepare files for zipping
+  let tuningDump = useScaleFormat ? 'TunS_000.TunS_bin' : 'TunO_000.TunO_bin'
+  let tuningInfo = useScaleFormat ? 'TunS_000.TunS_info' : 'TunO_000.TunO_info'
+  let tuningInfoXML = useScaleFormat ? './tuneScaleInformation.xml' : './tuneOctaveInformation.xml'
+  let fileInfoXML = useScaleFormat ? './scaleFileInformation.xml' : './octaveFileInformation.xml'
+
+  // build zip
+  const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
+  let zip = new JSZip()
+  zip.file(tuningDump, binaryString)
+  fetch(tuningInfoXML)
+  .then(response => { 
+    zip.file(tuningInfo, response.text()) 
+  })
+  .then(() => {
+      fetch(fileInfoXML).then(response => {
+          zip.file('FileInformation.xml', response.text())
+      })
+      .then( () => {
+              zip.generateAsync({type:"blob"}).then((blob) => {
+                 saveFile(filename, blob)
+              }, (err) => alert(err) )
+      })
+  })
 
   // success
   return true
