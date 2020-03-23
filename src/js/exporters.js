@@ -1,4 +1,4 @@
-/* global alert, MouseEvent, history, jQuery */
+/* global alert, MouseEvent, history, jQuery, fetch, JSZip */
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil, roundToNDecimals } from './helpers/general.js'
@@ -25,7 +25,7 @@ function exportError() {
   }
 }
 
-function saveFile(filename, contents, mimeType='application/octet-stream,') {
+function saveFile(filename, contents, mimeType = 'application/octet-stream,') {
   const link = document.createElement('a')
   link.download = filename
   link.href = 'data:' + mimeType + encodeURIComponent(contents)
@@ -356,12 +356,12 @@ function exportMnlgtun(useScaleFormat) {
   // build cents array for binary conversion
   let centsTable = tuningTable.freq.map(f => roundToNDecimals(6, decimalToCents(f / baseFreq) + baseOffsetValue))
 
-  let binaryString = ""
-  
+  let binaryString = ''
+
   // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
   if (!useScaleFormat) {
-    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => 6, c - centsTable[0])
-  // ensure table legth is exactly 128
+    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
+    // ensure table legth is exactly 128
   } else {
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
     // this shouldn't happen unless there are big changes to SW or something goes really wrong
@@ -382,28 +382,32 @@ function exportMnlgtun(useScaleFormat) {
 
   // prepare files for zipping
   const dir = 'src/assets/txt/mnlgtun'
-  let [tuningDump, tuningInfo, tuningInfoXML, fileInfoXML] = useScaleFormat
-    ? ['TunS_000.TunS_bin', 'TunS_000.TunS_info', dir + 'ScaleTuningInfo.xml' , dir + 'ScaleFileInfo.xml']
+  const [tuningDump, tuningInfo, tuningInfoXML, fileInfoXML] = useScaleFormat
+    ? ['TunS_000.TunS_bin', 'TunS_000.TunS_info', dir + 'ScaleTuningInfo.xml', dir + 'ScaleFileInfo.xml']
     : ['TunO_000.TunO_info', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
 
   // build zip
   const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
-  let zip = new JSZip()
+  const zip = new JSZip()
   zip.file(tuningDump, binaryString)
   fetch(tuningInfoXML)
-  .then(response => { 
-    zip.file(tuningInfo, response.text()) 
-  })
-  .then(() => {
-      fetch(fileInfoXML).then(response => {
+    .then(response => {
+      zip.file(tuningInfo, response.text())
+    })
+    .then(() => {
+      fetch(fileInfoXML)
+        .then(response => {
           zip.file('FileInformation.xml', response.text())
-      })
-      .then( () => {
-              zip.generateAsync({type:"base64"}).then((base64) => {
-                saveFile(filename, base64, 'application/zip;base64,')
-              }, (err) => alert(err) )
-      })
-  })
+        })
+        .then(() => {
+          zip.generateAsync({ type: 'base64' }).then(
+            base64 => {
+              saveFile(filename, base64, 'application/zip;base64,')
+            },
+            err => alert(err)
+          )
+        })
+    })
 
   // success
   return true
