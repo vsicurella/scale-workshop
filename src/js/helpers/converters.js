@@ -221,10 +221,12 @@ function midiNoteNumberToName(input) {
   return name[remainder] + quotient
 }
 
+// converts any scale degree into a period-reduced degree
 function degreeModPeriod(degree) {
   return mathModulo(degree, model.get('tuning table').noteCount - 1)
 }
 
+// converts any scale degree into a period-reduced cent value 
 function degreeModPeriodCents(degree) {
   const tuningTable = model.get('tuning table')
   return tuningTable.cents[degreeModPeriod(degree) + tuningTable.baseMidiNote]
