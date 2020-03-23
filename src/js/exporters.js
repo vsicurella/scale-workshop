@@ -2,7 +2,7 @@
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBin, mnlgBinaryToCents } from './helpers/converters.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBinary } from './helpers/converters.js'
 import {
   LINE_TYPE,
   MNLG_OCTAVESIZE,
@@ -373,14 +373,14 @@ function exportMnlgtun(useScaleFormat) {
 
   // convert to binary
   centsTable.forEach(c => {
-    binaryString += centsToMnlgBin(c)
+    binaryString += centsToMnlgBinary(c)
   })
 
   // prepare files for zipping
-  let tuningDump = useScaleFormat ? 'TunS_000.TunS_bin' : 'TunO_000.TunO_bin'
-  let tuningInfo = useScaleFormat ? 'TunS_000.TunS_info' : 'TunO_000.TunO_info'
-  let tuningInfoXML = useScaleFormat ? '../assets/txt/mnlgtunScaleTuningInfo.xml' : '../assets/txt/mnlgtunOctaveTuningInfo.xml'
-  let fileInfoXML = useScaleFormat ? '../assets/txt/mnlgtunScaleFileInfo.xml' : '../assets/txt/mnlgOctaveFileInfo.xml'
+  const dir = 'src/assets/txt/mnlgtun'
+  let [tuningDump, tuningInfo, tuningInfoXML, fileInfoXML] = useScaleFormat
+    ? ['TunS_000.TunS_bin', 'TunS_000.TunS_info', dir + 'ScaleTuningInfo.xml' , dir + 'ScaleFileInfo.xml']
+    : ['TunO_000.TunO_info', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
 
   // build zip
   const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
@@ -395,8 +395,8 @@ function exportMnlgtun(useScaleFormat) {
           zip.file('FileInformation.xml', response.text())
       })
       .then( () => {
-              zip.generateAsync({type:"blob"}).then((blob) => {
-                 saveFile(filename, blob)
+              zip.generateAsync({type:"base64"}).then((base64) => {
+                 saveFile(filename, base64)
               }, (err) => alert(err) )
       })
   })
