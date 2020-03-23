@@ -379,8 +379,8 @@ function exportMnlgtun(useScaleFormat) {
   // prepare files for zipping
   let tuningDump = useScaleFormat ? 'TunS_000.TunS_bin' : 'TunO_000.TunO_bin'
   let tuningInfo = useScaleFormat ? 'TunS_000.TunS_info' : 'TunO_000.TunO_info'
-  let tuningInfoXML = useScaleFormat ? './tuneScaleInformation.xml' : './tuneOctaveInformation.xml'
-  let fileInfoXML = useScaleFormat ? './scaleFileInformation.xml' : './octaveFileInformation.xml'
+  let tuningInfoXML = useScaleFormat ? '../assets/txt/mnlgtunScaleTuningInfo.xml' : '../assets/txt/mnlgtunOctaveTuningInfo.xml'
+  let fileInfoXML = useScaleFormat ? '../assets/txt/mnlgtunScaleFileInfo.xml' : '../assets/txt/mnlgOctaveFileInfo.xml'
 
   // build zip
   const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
