@@ -25,10 +25,10 @@ function exportError() {
   }
 }
 
-function saveFile(filename, contents) {
+function saveFile(filename, contents, mimeType='application/octet-stream,') {
   const link = document.createElement('a')
   link.download = filename
-  link.href = 'data:application/octet-stream,' + encodeURIComponent(contents)
+  link.href = 'data:' + mimeType + encodeURIComponent(contents)
   console.log(link.href)
   link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window })) // opens save dialog
 }
@@ -365,7 +365,7 @@ function exportMnlgtun(useScaleFormat) {
   } else {
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
     // this shouldn't happen unless there are big changes to SW or something goes really wrong
-    if (centsTable.length != MNLG_SCALESIZE) {
+    if (centsTable.length !== MNLG_SCALESIZE) {
       const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
       centsTable = [...centsTable, ...padding]
     }
