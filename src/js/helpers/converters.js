@@ -232,21 +232,29 @@ function degreeModPeriodCents(degree) {
   return tuningTable.cents[degreeModPeriod(degree) + tuningTable.baseMidiNote]
 }
 
-// converts a cents value into a binary string for the mnlgtun exporter
-function centsToMnlgBinary(centsIn) {
-  // restrict to valid values
-  let cents = centsIn
-  if (cents < 0) cents = 0
-  else if (cents >= MNLG_MAXCENTS) cents = MNLG_MAXCENTS
+// converts a cents array into a uint8 array for the mnlgtun exporter
+function centsTableToMnlgBinary(centsTableIn) {
+  const dataSize = centsTableIn.length * 3
+  let data = new Uint8Array(dataSize)
+  let dataIndex = 0
+  centsTableIn.forEach(cents => {
+    // restrict to valid values
+    if (cents < 0) cents = 0
+    else if (cents >= MNLG_MAXCENTS) cents = MNLG_MAXCENTS
 
-  const semitones = parseInt(cents) / 100.0
-  const hundreds = Math.floor(semitones)
+    const semitones = parseInt(cents) / 100.0
+    const hundreds = Math.trunc(semitones)
 
-  const tens = semitones - hundreds
-  const u16a = new Uint16Array([Math.round(0x8000 * tens)])
-  const u8a = new Uint8Array(u16a.buffer)
+    const tens = semitones - hundreds
+    const u16a = new Uint16Array([Math.round(0x8000 * tens)])
+    const u8a = new Uint8Array(u16a.buffer)
 
-  return String.fromCharCode(hundreds) + String.fromCharCode(u8a[1]) + String.fromCharCode(u8a[0])
+    data[dataIndex] = hundreds
+    data[dataIndex + 1] = u8a[1]
+    data[dataIndex + 2] = u8a[0]
+    dataIndex += 3
+  })
+  return data
 }
 
 // converts a mnlgtun binary string into an array of cents
@@ -286,6 +294,6 @@ export {
   midiNoteNumberToName,
   degreeModPeriod,
   degreeModPeriodCents,
-  centsToMnlgBinary,
+  centsTableToMnlgBinary,
   mnlgBinaryToCents
 }

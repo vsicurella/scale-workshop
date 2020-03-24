@@ -1,13 +1,13 @@
 /* global alert, MouseEvent, history, jQuery, fetch, JSZip */
 
 import { model, synth } from './scaleworkshop.js'
-import { isNil, roundToNDecimals } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsToMnlgBinary } from './helpers/converters.js'
+import { isNil, roundToNDecimals, findIndexClosestTo } from './helpers/general.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsTableToMnlgBinary } from './helpers/converters.js'
 import {
   LINE_TYPE,
   MNLG_OCTAVESIZE,
   MNLG_SCALESIZE,
-  MNLG_A440,
+  MNLG_HZREF,
   APP_TITLE,
   TUNING_MAX_SIZE,
   UNIX_NEWLINE,
@@ -350,46 +350,47 @@ function exportMnlgtun(useScaleFormat) {
 
   const tuningTable = model.get('tuning table')
   const baseFreq = tuningTable.baseFrequency
+
+  // find closest reference note to baseFreq
+  const refNotes = Object.keys(MNLG_HZREF)
+  const refValues = refNotes.map(n => MNLG_HZREF[n].freq)
+  const bestIndex = findIndexClosestTo(baseFreq, refValues)
+  const reference = MNLG_HZREF[refNotes[bestIndex]]
+
   // the index of the scale dump that's equal to the baseNote should have the following value
-  const baseOffsetValue = MNLG_A440 + decimalToCents(baseFreq / 440)
+  const baseOffsetValue = reference.int + decimalToCents(baseFreq / reference.freq)
 
   // build cents array for binary conversion
-  let centsTable = tuningTable.freq.map(f => roundToNDecimals(6, decimalToCents(f / baseFreq) + baseOffsetValue))
-
-  let binaryString = ''
+  let centsTable = tuningTable.freq.map(f => roundToNDecimals(6, decimalToCents(f / baseFreq)) + baseOffsetValue)
 
   // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
   if (!useScaleFormat) {
     centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
-    // ensure table legth is exactly 128
+    // ensure table length is exactly 128
   } else {
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
+
     // this shouldn't happen unless there are big changes to SW or something goes really wrong
     if (centsTable.length !== MNLG_SCALESIZE) {
+      console.log("Somehow the table was less than 128 values, the end will be padded with 0s.")
       const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
       centsTable = [...centsTable, ...padding]
     }
   }
 
   // convert to binary
-  centsTable.forEach(c => {
-    binaryString += centsToMnlgBinary(c)
-  })
-
-  console.log(centsTable)
-  console.log('=====>')
-  console.log(binaryString)
+  const binaryData = centsTableToMnlgBinary(centsTable)
 
   // prepare files for zipping
   const dir = 'src/assets/txt/mnlgtun'
   const [tuningDump, tuningInfo, tuningInfoXML, fileInfoXML] = useScaleFormat
     ? ['TunS_000.TunS_bin', 'TunS_000.TunS_info', dir + 'ScaleTuningInfo.xml', dir + 'ScaleFileInfo.xml']
-    : ['TunO_000.TunO_info', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
+    : ['TunO_000.TunO_bin', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
 
   // build zip
   const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
   const zip = new JSZip()
-  zip.file(tuningDump, binaryString)
+  zip.file(tuningDump, binaryData)
   fetch(tuningInfoXML)
     .then(response => {
       zip.file(tuningInfo, response.text())
@@ -400,8 +401,7 @@ function exportMnlgtun(useScaleFormat) {
           zip.file('FileInformation.xml', response.text())
         })
         .then(() => {
-          zip.generateAsync({ type: 'base64' }).then(
-            base64 => {
+          zip.generateAsync({ type: 'base64' }).then(base64 => {
               saveFile(filename, base64, 'application/zip;base64,')
             },
             err => alert(err)
