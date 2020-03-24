@@ -8,6 +8,7 @@ import {
   redirectToHTTPS,
   getSearchParamOr,
   getSearchParamAsNumberOr,
+  findIndexClosestTo,
   isNil,
   getNewlineSettingsFromBrowser,
   roundToNDecimals
@@ -21,7 +22,8 @@ import {
   stepsToDegrees,
   degreesToSteps,
   degreeModPeriodCents,
-  mnlgBinaryToCents
+  mnlgBinaryToCents,
+  centsToDecimal
 } from './helpers/converters.js'
 import {
   LINE_TYPE,
@@ -856,7 +858,7 @@ function parseImportedAnamarkTun(event) {
 // However, user must know the correct period for it to work properly.
 // If zero is supplied, no reduction will happen and the unmodified cents table will be dumped.
 // Reduction results can be unreliable to do rounding during file creation.
-function parseImportedMnlgtun(event, reduceToPeriod=0) {
+function parseImportedMnlgtun(event, reduceToPeriod=1200) {
 
   const input = event.target
 
@@ -864,7 +866,7 @@ function parseImportedMnlgtun(event, reduceToPeriod=0) {
   if (isNil(input.files[0])) {
     return false
   }
-  console.log("Parsing MNLGTUN input file")
+
   let zip = new JSZip()
   zip.loadAsync(input.files[0])
     .then(result => {
@@ -878,8 +880,9 @@ function parseImportedMnlgtun(event, reduceToPeriod=0) {
           let cents = mnlgBinaryToCents(binaryString)
           if (cents.length > 0) {
 
-            // extract base info
-            // find note closest to A440
+            // extract tuning base info as best we can using A440
+            const baseNote = findIndexClosestTo(MNLG_A440, cents)
+            const baseFrequency = centsToDecimal(cents[baseNote] - MNLG_A440) * 440
             
             // reduce
             if (reduceToPeriod > 0) {
@@ -897,7 +900,6 @@ function parseImportedMnlgtun(event, reduceToPeriod=0) {
               // remove unison, and add period
               cents.shift()
               cents.push(reduceToPeriod)
-              console.log(cents)
             }
 
             jQuery('#txt_tuning_data').val(cents.map(c => {
@@ -909,6 +911,9 @@ function parseImportedMnlgtun(event, reduceToPeriod=0) {
               return c
             }).join(UNIX_NEWLINE))
 
+            jQuery('#txt_base_frequency').val(baseFrequency)
+            jQuery('#txt_base_midi_note').val(baseNote)
+            
             parseTuningData()
             return true
 
