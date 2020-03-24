@@ -35,6 +35,19 @@ function getCoordsFromKey(tdOfKeyboard) {
   }
 }
 
+function findIndexClosestTo(valueToCompare, arrayIn) {
+  let dif1 = Number.MAX_SAFE_INTEGER
+  let dif2
+  let closestIndex = 0
+  arrayIn.forEach((v, index) => {
+    dif2 = Math.abs(valueToCompare - v)
+    if (dif2 < dif1) {
+      closestIndex = index
+    }
+  })
+  return closestIndex
+}
+
 const roundToNDecimals = (decimals, number) => {
   return Math.round(number * 10 ** decimals) / 10 ** decimals
 }
@@ -139,6 +152,7 @@ export {
   isFunction,
   isNil,
   getCoordsFromKey,
+  findIndexClosestTo,
   roundToNDecimals,
   tap,
   getSearchParamOr,
