@@ -372,7 +372,7 @@ function exportMnlgtun(useScaleFormat) {
 
     // this shouldn't happen unless there are big changes to SW or something goes really wrong
     if (centsTable.length !== MNLG_SCALESIZE) {
-      console.log("Somehow the table was less than 128 values, the end will be padded with 0s.")
+      console.log('Somehow the table was less than 128 values, the end will be padded with 0s.')
       const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
       centsTable = [...centsTable, ...padding]
     }
@@ -401,7 +401,8 @@ function exportMnlgtun(useScaleFormat) {
           zip.file('FileInformation.xml', response.text())
         })
         .then(() => {
-          zip.generateAsync({ type: 'base64' }).then(base64 => {
+          zip.generateAsync({ type: 'base64' }).then(
+            base64 => {
               saveFile(filename, base64, 'application/zip;base64,')
             },
             err => alert(err)

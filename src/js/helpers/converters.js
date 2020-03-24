@@ -235,10 +235,11 @@ function degreeModPeriodCents(degree) {
 // converts a cents array into a uint8 array for the mnlgtun exporter
 function centsTableToMnlgBinary(centsTableIn) {
   const dataSize = centsTableIn.length * 3
-  let data = new Uint8Array(dataSize)
+  const data = new Uint8Array(dataSize)
   let dataIndex = 0
-  centsTableIn.forEach(cents => {
+  centsTableIn.forEach(c => {
     // restrict to valid values
+    let cents = c
     if (cents < 0) cents = 0
     else if (cents >= MNLG_MAXCENTS) cents = MNLG_MAXCENTS
 

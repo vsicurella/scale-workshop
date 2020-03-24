@@ -2,7 +2,7 @@
  * INIT
  */
 
-/* global location, localStorage, alert, FileReader, DOMParser, jQuery */
+/* global location, localStorage, alert, FileReader, DOMParser, jQuery, JSZip */
 
 import {
   redirectToHTTPS,
@@ -867,75 +867,71 @@ function parseImportedMnlgtun(event, reduceToPeriod = 0) {
     return false
   }
 
-  let zip = new JSZip()
-  zip.loadAsync(input.files[0])
-    .then(result => {
-      
-      // check if meets size requirements
-      let bin = result.files[Object.keys(result.files)[0]]
-      if (bin.name.endsWith('_bin') && bin['_data'].uncompressedSize % 3 === 0) {
-          let binaryString = bin['_data'].compressedContent.reduce((a, b) => a + String.fromCharCode(b), "")
-          console.log(binaryString)
-          // extract bin info to string
-          let cents = mnlgBinaryToCents(binaryString)
-          if (cents.length > 0) {
+  const zip = new JSZip()
+  zip.loadAsync(input.files[0]).then(result => {
+    // check if meets size requirements
+    const bin = result.files[Object.keys(result.files)[0]]
+    if (bin.name.endsWith('_bin') && bin._data.uncompressedSize % 3 === 0) {
+      const binaryString = bin._data.compressedContent.reduce((a, b) => a + String.fromCharCode(b), '')
+      console.log(binaryString)
+      // extract bin info to string
+      let cents = mnlgBinaryToCents(binaryString)
+      if (cents.length > 0) {
+        // extract tuning base info as best we can using A = 440hz and C = 261.63hz
+        const refNotes = Object.keys(MNLG_HZREF)
+        const refValues = refNotes.map(n => MNLG_HZREF[n].int)
+        const closestNotes = refValues.map(x => findIndexClosestTo(x, cents))
+        const differences = refValues.map((x, ind) => Math.abs(x - closestNotes[ind]))
+        const bestIndex = differences.indexOf(Math.min.apply(Math, differences))
+        const reference = MNLG_HZREF[refNotes[bestIndex]]
 
-            // extract tuning base info as best we can using A = 440hz and C = 261.63hz
-            const refNotes = Object.keys(MNLG_HZREF)
-            const refValues = refNotes.map(n => MNLG_HZREF[n].int)
-            const closestNotes = refValues.map(x => findIndexClosestTo(x, cents))
-            const differences = refValues.map((x, ind) => Math.abs(x - closestNotes[ind]))
-            const bestIndex = differences.indexOf(Math.min.apply(Math, differences))
-            const reference = MNLG_HZREF[refNotes[bestIndex]]
+        const baseNote = closestNotes[bestIndex]
+        const baseFrequency = roundToNDecimals(6, centsToDecimal(cents[baseNote] - reference.int) * reference.freq)
 
-            const baseNote = closestNotes[bestIndex]
-            const baseFrequency = roundToNDecimals(6, 
-              centsToDecimal(cents[baseNote] - reference.int) * reference.freq
-            )
-            
-            // reduce
-            if (reduceToPeriod > 0) {
-              cents = cents.map(c => c % reduceToPeriod).filter((c, i, arr) => arr.indexOf(c) === i)
+        // reduce
+        if (reduceToPeriod > 0) {
+          cents = cents.map(c => c % reduceToPeriod).filter((c, i, arr) => arr.indexOf(c) === i)
 
-              // normalize, which is needed if A440 was not the tuning reference
-              const minCents = Math.min.apply(Math, cents)
-              if (minCents !== 0) {
-                cents = cents.map(c => c - minCents)
-              }
+          // normalize, which is needed if A440 was not the tuning reference
+          const minCents = Math.min.apply(Math, cents)
+          if (minCents !== 0) {
+            cents = cents.map(c => c - minCents)
+          }
 
-              // sort, for when index 0 was not the root
-              cents.sort((a, b) => a - b)
+          // sort, for when index 0 was not the root
+          cents.sort((a, b) => a - b)
 
-              // remove unison, and add period
-              cents.shift()
-              cents.push(reduceToPeriod)
-              
-            }
-            console.log(cents)
-            jQuery('#txt_tuning_data').val(cents.map(c => {
+          // remove unison, and add period
+          cents.shift()
+          cents.push(reduceToPeriod)
+        }
+        console.log(cents)
+        jQuery('#txt_tuning_data').val(
+          cents
+            .map(c => {
               // make sure they get are cent values
               if (!(c + '').includes('.')) {
                 return c + '.'
               }
 
               return c
-            }).join(UNIX_NEWLINE))
+            })
+            .join(UNIX_NEWLINE)
+        )
 
-            jQuery('#txt_base_frequency').val(baseFrequency)
-            jQuery('#txt_base_midi_note').val(baseNote)
-            
-            parseTuningData()
-            return true
+        jQuery('#txt_base_frequency').val(baseFrequency)
+        jQuery('#txt_base_midi_note').val(baseNote)
 
-          } else {
-            alert("File does not contain tuning data.")
-            return false
-          }
-
+        parseTuningData()
+        return true
       } else {
-          alert("Not a valid mnlgtun file.")
-          return false
+        alert('File does not contain tuning data.')
+        return false
       }
+    } else {
+      alert('Not a valid mnlgtun file.')
+      return false
+    }
   })
 }
 

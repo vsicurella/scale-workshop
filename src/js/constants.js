@@ -13,11 +13,11 @@ const MNLG_SCALESIZE = 128
 const MNLG_MAXCENTS = 12800
 const MNLG_HZREF = {
   a: {
-    freq: 440.0, 
+    freq: 440.0,
     int: 6900
   },
   c: {
-    freq: 261.6255653, 
+    freq: 261.6255653,
     int: 6000
   }
 }
