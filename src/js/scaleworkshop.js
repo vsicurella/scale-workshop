@@ -873,7 +873,7 @@ function parseImportedMnlgtun(event, reduceToPeriod = 0) {
     const bin = result.files[Object.keys(result.files)[0]]
     if (bin.name.endsWith('_bin') && bin._data.uncompressedSize % 3 === 0) {
       const binaryString = bin._data.compressedContent.reduce((a, b) => a + String.fromCharCode(b), '')
-      console.log(binaryString)
+
       // extract bin info to string
       let cents = mnlgBinaryToCents(binaryString)
       if (cents.length > 0) {
@@ -897,15 +897,17 @@ function parseImportedMnlgtun(event, reduceToPeriod = 0) {
           if (minCents !== 0) {
             cents = cents.map(c => c - minCents)
           }
-
-          // sort, for when index 0 was not the root
-          cents.sort((a, b) => a - b)
-
-          // remove unison, and add period
-          cents.shift()
-          cents.push(reduceToPeriod)
         }
-        console.log(cents)
+
+        // sort, for when index 0 was not the root
+        cents.sort((a, b) => a - b)
+
+        // remove unison
+        if (cents[0] === 0) cents.shift()
+
+        // add period if supplied
+        if (reduceToPeriod && cents[cents.length - 1] !== reduceToPeriod) cents.push(reduceToPeriod)
+
         jQuery('#txt_tuning_data').val(
           cents
             .map(c => {
