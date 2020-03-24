@@ -42,6 +42,7 @@ function findIndexClosestTo(valueToCompare, arrayIn) {
   arrayIn.forEach((v, index) => {
     dif2 = Math.abs(valueToCompare - v)
     if (dif2 < dif1) {
+      dif1 = dif2
       closestIndex = index
     }
   })
