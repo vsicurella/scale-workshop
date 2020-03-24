@@ -32,7 +32,8 @@ import {
   NEWLINE_REGEX,
   LOCALSTORAGE_PREFIX,
   PRIMES,
-  MNLG_A440
+  MNLG_A440,
+  MNLG_C262
 } from './constants.js'
 import {
   getScaleUrl,
@@ -880,9 +881,14 @@ function parseImportedMnlgtun(event, reduceToPeriod=1200) {
           let cents = mnlgBinaryToCents(binaryString)
           if (cents.length > 0) {
 
-            // extract tuning base info as best we can using A440
-            const baseNote = findIndexClosestTo(MNLG_A440, cents)
-            const baseFrequency = centsToDecimal(cents[baseNote] - MNLG_A440) * 440
+            // extract tuning base info as best we can using A = 440hz and C = 261.63hz
+            const noteReferences = [MNLG_A440, MNLG_C262]
+            const possibleBaseNotes = noteReferences.map(x => findIndexClosestTo(x, cents))
+            const noteDifferences = noteReferences.map((x, ind) => Math.abs(x - possibleBaseNotes[ind]))
+            const bestReferenceIndex = noteDifferences.indexOf(Math.min.apply(Math, noteDifferences))
+
+            const baseNote = possibleBaseNotes[bestReferenceIndex]
+            const baseFrequency = roundToNDecimals(6, centsToDecimal(cents[baseNote] - noteReferences[bestReferenceIndex]) * 440)
             
             // reduce
             if (reduceToPeriod > 0) {
