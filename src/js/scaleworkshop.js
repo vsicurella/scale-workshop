@@ -32,8 +32,7 @@ import {
   NEWLINE_REGEX,
   LOCALSTORAGE_PREFIX,
   PRIMES,
-  MNLG_A440,
-  MNLG_C262
+  MNLG_HZREF
 } from './constants.js'
 import {
   getScaleUrl,
@@ -855,11 +854,11 @@ function parseImportedAnamarkTun(event) {
   }
 }
 
-// reduceToPeriod should be a cents value, and is used so that the parsed scale isn't 128 values long
-// However, user must know the correct period for it to work properly.
-// If zero is supplied, no reduction will happen and the unmodified cents table will be dumped.
-// Reduction results can be unreliable to do rounding during file creation.
-function parseImportedMnlgtun(event, reduceToPeriod=1200) {
+function parseImportedMnlgtun(event, reduceToPeriod = 0) {
+  // reduceToPeriod should be a cents value, and is used so that the parsed scale isn't 128 values long
+  // However, user must know the correct period for it to work properly.
+  // If zero is supplied, no reduction will happen and the unmodified cents table will be dumped.
+  // Reduction results can be unreliable to do rounding during file creation.
 
   const input = event.target
 
@@ -876,19 +875,23 @@ function parseImportedMnlgtun(event, reduceToPeriod=1200) {
       let bin = result.files[Object.keys(result.files)[0]]
       if (bin.name.endsWith('_bin') && bin['_data'].uncompressedSize % 3 === 0) {
           let binaryString = bin['_data'].compressedContent.reduce((a, b) => a + String.fromCharCode(b), "")
-
+          console.log(binaryString)
           // extract bin info to string
           let cents = mnlgBinaryToCents(binaryString)
           if (cents.length > 0) {
 
             // extract tuning base info as best we can using A = 440hz and C = 261.63hz
-            const noteReferences = [MNLG_A440, MNLG_C262]
-            const possibleBaseNotes = noteReferences.map(x => findIndexClosestTo(x, cents))
-            const noteDifferences = noteReferences.map((x, ind) => Math.abs(x - possibleBaseNotes[ind]))
-            const bestReferenceIndex = noteDifferences.indexOf(Math.min.apply(Math, noteDifferences))
+            const refNotes = Object.keys(MNLG_HZREF)
+            const refValues = refNotes.map(n => MNLG_HZREF[n].int)
+            const closestNotes = refValues.map(x => findIndexClosestTo(x, cents))
+            const differences = refValues.map((x, ind) => Math.abs(x - closestNotes[ind]))
+            const bestIndex = differences.indexOf(Math.min.apply(Math, differences))
+            const reference = MNLG_HZREF[refNotes[bestIndex]]
 
-            const baseNote = possibleBaseNotes[bestReferenceIndex]
-            const baseFrequency = roundToNDecimals(6, centsToDecimal(cents[baseNote] - noteReferences[bestReferenceIndex]) * 440)
+            const baseNote = closestNotes[bestIndex]
+            const baseFrequency = roundToNDecimals(6, 
+              centsToDecimal(cents[baseNote] - reference.int) * reference.freq
+            )
             
             // reduce
             if (reduceToPeriod > 0) {
@@ -906,8 +909,9 @@ function parseImportedMnlgtun(event, reduceToPeriod=1200) {
               // remove unison, and add period
               cents.shift()
               cents.push(reduceToPeriod)
+              
             }
-
+            console.log(cents)
             jQuery('#txt_tuning_data').val(cents.map(c => {
               // make sure they get are cent values
               if (!(c + '').includes('.')) {

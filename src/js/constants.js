@@ -11,7 +11,16 @@ const SEMITONE_RATIO_IN_12_EDO = Math.pow(2, 1 / 12)
 const MNLG_OCTAVESIZE = 12
 const MNLG_SCALESIZE = 128
 const MNLG_MAXCENTS = 12800
-const MNLG_A440 = 6900
+const MNLG_HZREF = {
+  a: {
+    freq: 440.0, 
+    int: 6900
+  },
+  c: {
+    freq: 261.6255653, 
+    int: 6000
+  }
+}
 
 // prettier-ignore
 const PRIMES = [
@@ -111,7 +120,7 @@ export {
   SEMITONE_RATIO_IN_12_EDO,
   MNLG_OCTAVESIZE,
   MNLG_SCALESIZE,
-  MNLG_A440,
+  MNLG_HZREF,
   MNLG_MAXCENTS,
   PRIMES,
   APP_TITLE,
