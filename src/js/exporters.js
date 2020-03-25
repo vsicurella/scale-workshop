@@ -388,7 +388,7 @@ function exportMnlgtun(useScaleFormat) {
     : ['TunO_000.TunO_bin', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
 
   // build zip
-  const filename = tuningTable.filename + useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
+  const fileType = useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
   const zip = new JSZip()
   zip.file(tuningDump, binaryData)
   fetch(tuningInfoXML)
@@ -403,7 +403,7 @@ function exportMnlgtun(useScaleFormat) {
         .then(() => {
           zip.generateAsync({ type: 'base64' }).then(
             base64 => {
-              saveFile(filename, base64, 'application/zip;base64,')
+              saveFile(tuningTable.filename + fileType, base64, 'application/zip;base64,')
             },
             err => alert(err)
           )
