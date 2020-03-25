@@ -854,11 +854,8 @@ function parseImportedAnamarkTun(event) {
   }
 }
 
-function parseImportedMnlgtun(event, reduceToPeriod = 0) {
-  // reduceToPeriod should be a cents value, and is used so that the parsed scale isn't 128 values long
-  // However, user must know the correct period for it to work properly.
-  // If zero is supplied, no reduction will happen and the unmodified cents table will be dumped.
-  // Reduction results can be unreliable to do rounding during file creation.
+function parseImportedMnlgtun(event) {
+  // TODO: Add features for extracting scale information to reduce a table of 128 values into a periodic scale
 
   const input = event.target
 
@@ -888,25 +885,19 @@ function parseImportedMnlgtun(event, reduceToPeriod = 0) {
         const baseNote = closestNotes[bestIndex]
         const baseFrequency = roundToNDecimals(6, centsToDecimal(cents[baseNote] - reference.int) * reference.freq)
 
-        // reduce
-        if (reduceToPeriod > 0) {
-          cents = cents.map(c => c % reduceToPeriod).filter((c, i, arr) => arr.indexOf(c) === i)
-
-          // normalize, which is needed if A440 was not the tuning reference
-          const minCents = Math.min.apply(Math, cents)
-          if (minCents !== 0) {
-            cents = cents.map(c => c - minCents)
-          }
-        }
-
         // sort, for when index 0 was not the root
         cents.sort((a, b) => a - b)
 
+        // normalize, which is needed if A440 was not the tuning reference
+        const minCents = Math.min.apply(Math, cents)
+        if (minCents !== 0) {
+          cents = cents.map(c => c - minCents)
+        }
+
         // remove unison
         if (cents[0] === 0) cents.shift()
-
-        // add period if supplied
-        if (reduceToPeriod && cents[cents.length - 1] !== reduceToPeriod) cents.push(reduceToPeriod)
+        // add period
+        else if (cents.length === 12) cents.push(1200)
 
         jQuery('#txt_tuning_data').val(
           cents
