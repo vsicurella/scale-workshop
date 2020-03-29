@@ -358,16 +358,17 @@ function exportMnlgtun(useScaleFormat) {
   const reference = MNLG_HZREF[refNotes[bestIndex]]
 
   // the index of the scale dump that's equal to the baseNote should have the following value
-  const baseOffsetValue = reference.int + decimalToCents(baseFreq / reference.freq)
+  const baseOffsetValue = reference.int + Math.round(decimalToCents(baseFreq / reference.freq))
 
   // build cents array for binary conversion
-  let centsTable = tuningTable.freq.map(f => roundToNDecimals(6, decimalToCents(f / baseFreq)) + baseOffsetValue)
+  let centsTable = tuningTable.cents.map(c => c + baseOffsetValue)
 
-  // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
   if (!useScaleFormat) {
+    // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
     centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
-    // ensure table length is exactly 128
+
   } else {
+    // ensure table length is exactly 128
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
 
     // this shouldn't happen unless there are big changes to SW or something goes really wrong
