@@ -1,7 +1,7 @@
 /* global alert, MouseEvent, history, jQuery, fetch, JSZip */
 
 import { model, synth } from './scaleworkshop.js'
-import { isNil, roundToNDecimals, findIndexClosestTo } from './helpers/general.js'
+import { isNil, findIndexClosestTo } from './helpers/general.js'
 import { decimalToCents, mtof, midiNoteNumberToName, ftom, centsTableToMnlgBinary } from './helpers/converters.js'
 import {
   LINE_TYPE,
@@ -366,7 +366,6 @@ function exportMnlgtun(useScaleFormat) {
   if (!useScaleFormat) {
     // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
     centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
-
   } else {
     // ensure table length is exactly 128
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)

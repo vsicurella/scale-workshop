@@ -264,7 +264,6 @@ function mnlgBinaryToCents(binaryData) {
   const tuningSize = binaryData.length / 3
   for (let i = 0; i < tuningSize; i++) {
     const str = binaryData.slice(i * 3, i * 3 + 3)
-
     const hundreds = str.charCodeAt(0) * 100
     let tens = new Uint8Array([str.charCodeAt(2), str.charCodeAt(1)])
     tens = Math.trunc((parseInt(new Uint16Array(tens.buffer)) / 0x8000) * 100)

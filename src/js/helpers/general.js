@@ -36,7 +36,7 @@ function getCoordsFromKey(tdOfKeyboard) {
 }
 
 const findIndexClosestTo = (value, array) => {
-  return array.map(x => Math.abs(value - x)).reduce((ci, d, i, a) => d < a[ci] ? i : ci, 0)
+  return array.map(x => Math.abs(value - x)).reduce((ci, d, i, a) => (d < a[ci] ? i : ci), 0)
 }
 
 const roundToNDecimals = (decimals, number) => {
