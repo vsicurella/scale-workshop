@@ -35,18 +35,8 @@ function getCoordsFromKey(tdOfKeyboard) {
   }
 }
 
-function findIndexClosestTo(valueToCompare, arrayIn) {
-  let dif1 = Number.MAX_SAFE_INTEGER
-  let dif2
-  let closestIndex = 0
-  arrayIn.forEach((v, index) => {
-    dif2 = Math.abs(valueToCompare - v)
-    if (dif2 < dif1) {
-      dif1 = dif2
-      closestIndex = index
-    }
-  })
-  return closestIndex
+const findIndexClosestTo = (value, array) => {
+  return array.map(x => Math.abs(value - x)).reduce((ci, d, i, a) => d < a[ci] ? i : ci, 0)
 }
 
 const roundToNDecimals = (decimals, number) => {
