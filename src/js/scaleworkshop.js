@@ -885,9 +885,6 @@ function parseImportedMnlgtun(event) {
         const baseNote = closestNotes[bestIndex]
         const baseFrequency = roundToNDecimals(6, centsToDecimal(cents[baseNote] - reference.int) * reference.freq)
 
-        // sort, for when index 0 was not the root
-        cents.sort((a, b) => a - b)
-
         // normalize, which is needed if A440 was not the tuning reference
         const minCents = Math.min.apply(Math, cents)
         if (minCents !== 0) {
