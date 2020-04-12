@@ -33,7 +33,8 @@ import {
   modifyMode,
   modifySyncBeating,
   modifyStretch,
-  modifyReplaceWithApproximation
+  modifyReplaceWithApproximation,
+  modifySort
 } from './modifiers.js'
 import { updatePageUrl } from './exporters.js'
 import { Keymap } from './keymap.js'
@@ -379,6 +380,11 @@ function initEvents() {
       mode = rotateArrayRight(1, mode)
     }
     model.set('modify mode input', mode)
+  })
+
+  jQuery('#modify_sort').on('click', function(event) {
+    event.preventDefault()
+    openDialog('#modal_modify_sort', modifySort)
   })
 
   /*

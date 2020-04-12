@@ -457,11 +457,44 @@ function modifyUpdateApproximations() {
   }
 }
 
+// sort the scale
+function modifySort() {
+  // remove white space from tuning data field
+  trimSelf('#txt_tuning_data')
+
+  if (isEmpty(jQuery('#txt_tuning_data').val())) {
+    alert('No tuning data to modify.')
+    return false
+  }
+
+  const lines = document.getElementById('txt_tuning_data').value.split(NEWLINE_REGEX)
+  
+  // convert all pitches to decimal, mapped to original notation, and sort by the decimal value
+  const pitches = {}
+  lines.forEach(x => pitches[lineToDecimal(x)] = x)
+  const pitchesSorted = Object.keys(pitches).sort((a, b) => a - b)
+
+  // rebuild sorted tuning
+  let sortedTuning = ''
+  for (let i = 0; i < pitchesSorted.length; i++) {
+    sortedTuning +=  pitches[pitchesSorted[i]] + UNIX_NEWLINE
+  }
+
+  sortedTuning = sortedTuning.trim() // remove final newline
+
+  jQuery('#txt_tuning_data').val(sortedTuning)
+  parseTuningData()
+
+  jQuery('#modal_modify_sort').dialog('close')
+  return true
+}
+
 export {
   modifyUpdateApproximations,
   modifyRandomVariance,
   modifyMode,
   modifySyncBeating,
   modifyStretch,
-  modifyReplaceWithApproximation
+  modifyReplaceWithApproximation,
+  modifySort
 }
