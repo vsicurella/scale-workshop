@@ -33,6 +33,7 @@ import {
   exportPdText,
   exportKontaktScript,
   exportReferenceDeflemask,
+  exportReaperNamedNotes,
   exportUrl
 } from './exporters.js'
 import {
@@ -868,6 +869,9 @@ jQuery('#export-buttons').on('click', 'a', e => {
       break
     case 'deflemask-reference':
       exportReferenceDeflemask()
+      break
+    case 'reaper-named-notes':
+      exportReaperNamedNotes()
       break
     case 'url':
       exportUrl()

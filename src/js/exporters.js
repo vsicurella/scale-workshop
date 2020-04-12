@@ -6,6 +6,7 @@ import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/conv
 import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
+import { mathModulo } from './helpers/numbers.js'
 
 function exportError() {
   const tuningTable = model.get('tuning table')
@@ -328,6 +329,38 @@ function exportReferenceDeflemask() {
   return true
 }
 
+function exportReaperNamedNotes() {
+  // This exporter enumerates the scale data to 128 MIDI notes in a readable format
+  // that can be loaded into Reaper's piano roll in "Named Note" mode.
+
+  if (exportError()) {
+    return false
+  }
+
+  // TODO: enumeration settings
+  // - use written pitches or convert all to cents/frequencies
+  // - use period numbers or factor period into pitch
+  //    - will need to choose "root" if cents are used
+
+  // use scale data with period numbers
+  const tuningTable = model.get('tuning table')
+  const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
+  const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
+  const tuningSize = tuningTable.noteCount - 1
+
+  let file = '# MIDI note / CC name map' + newline
+  for (let i = 127; i >= 0; i--) {
+    const rootOffset = i - tuningTable.baseMidiNote
+    const periodNumber = Math.trunc(rootOffset / tuningSize)
+    file += i + ' ' + scaleData[mathModulo(rootOffset, tuningSize)] + '  (' + periodNumber + ')' + newline
+  }
+
+  saveFile(tuningTable.filename + '.txt', file)
+
+  // success
+  return true
+}
+
 function getScaleUrl() {
   const url = new URL(window.location.href)
   const protocol = !isEmpty(url.protocol) ? url.protocol + '//' : 'http://'
@@ -417,5 +450,6 @@ export {
   exportPdText,
   exportKontaktScript,
   exportReferenceDeflemask,
+  exportReaperNamedNotes,
   exportUrl
 }
