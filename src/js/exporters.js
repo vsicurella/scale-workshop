@@ -1,4 +1,4 @@
-/* global alert, MouseEvent, history, jQuery, fetch, JSZip */
+/* global alert, MouseEvent, history, jQuery, JSZip */
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil, findIndexClosestTo } from './helpers/general.js'
@@ -337,6 +337,57 @@ function exportReferenceDeflemask() {
   return true
 }
 
+function getMnlgtunTuningInfoXML(useScaleFormat, programmer, comment) {
+  // Builds an XML file necessary for the .mnlgtun file format
+  const rootName = useScaleFormat ? 'minilogue_TuneScaleInformation' : 'minilogue_TuneOctInformation'
+  const xml = document.implementation.createDocument(null, rootName)
+
+  const Programmer = xml.createElement('Programmer')
+  Programmer.textContent = programmer
+  xml.documentElement.appendChild(Programmer)
+
+  const Comment = xml.createElement('Comment')
+  Comment.textContent = comment
+  xml.documentElement.appendChild(Comment)
+
+  return xml
+}
+
+function getMnlgtunFileInfoXML(useScaleFormat, product = 'minilogue') {
+  // Builds an XML file necessary for the .mnlgtun file format
+  const rootName = 'KorgMSLibrarianData'
+  const xml = document.implementation.createDocument(null, rootName)
+
+  const Product = xml.createElement('Product')
+  Product.textContent = product
+  xml.documentElement.appendChild(Product)
+
+  const Contents = xml.createElement('Contents')
+  Contents.setAttribute('NumProgramData', 0)
+  Contents.setAttribute('NumPresetInformation', 0)
+  Contents.setAttribute('NumTuneScaleData', 1 * useScaleFormat)
+  Contents.setAttribute('NumTuneOctData', 1 * !useScaleFormat)
+
+  const [fileNameHeader, dataName, binName] = useScaleFormat
+    ? ['TunS_000.TunS_', 'TuneScaleData', 'TuneScaleBinary']
+    : ['TunO_000.TunO_', 'TuneOctData', 'TuneOctBinary']
+
+  const TuneData = xml.createElement(dataName)
+
+  const Information = xml.createElement('Information')
+  Information.textContent = fileNameHeader + 'info'
+  TuneData.appendChild(Information)
+
+  const BinData = xml.createElement(binName)
+  BinData.textContent = fileNameHeader + 'bin'
+  TuneData.appendChild(BinData)
+
+  Contents.appendChild(TuneData)
+  xml.documentElement.appendChild(Contents)
+
+  return xml
+}
+
 function exportMnlgtun(useScaleFormat) {
   // This exporter converts tuning data into a zip-compressed file for use with Korg's
   // 'logue Sound Librarian software, supporting their 'logue series of synthesizers.
@@ -370,7 +421,7 @@ function exportMnlgtun(useScaleFormat) {
     // ensure table length is exactly 128
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
 
-    // this shouldn't happen unless there are big changes to SW or something goes really wrong
+    // this shouldn't happen unless something goes really wrong
     if (centsTable.length !== MNLG_SCALESIZE) {
       console.log('Somehow the table was less than 128 values, the end will be padded with 0s.')
       const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
@@ -382,33 +433,21 @@ function exportMnlgtun(useScaleFormat) {
   const binaryData = centsTableToMnlgBinary(centsTable)
 
   // prepare files for zipping
-  const dir = 'src/assets/txt/mnlgtun'
-  const [tuningDump, tuningInfo, tuningInfoXML, fileInfoXML] = useScaleFormat
-    ? ['TunS_000.TunS_bin', 'TunS_000.TunS_info', dir + 'ScaleTuningInfo.xml', dir + 'ScaleFileInfo.xml']
-    : ['TunO_000.TunO_bin', 'TunO_000.TunO_info', dir + 'OctaveTuningInfo.xml', dir + 'OctaveFileInfo.xml']
+  const tuningInfo = getMnlgtunTuningInfoXML(useScaleFormat, 'ScaleWorkshop', tuningTable.filename)
+  const fileInfo = getMnlgtunFileInfoXML(useScaleFormat)
+  const [fileNameHeader, fileType] = useScaleFormat ? ['TunS_000.TunS_', '.mnlgtuns'] : ['TunO_000.TunO_', '.mnlgtuno']
 
   // build zip
-  const fileType = useScaleFormat ? '.mnlgtuns' : '.mnlgtuno'
   const zip = new JSZip()
-  zip.file(tuningDump, binaryData)
-  fetch(tuningInfoXML)
-    .then(response => {
-      zip.file(tuningInfo, response.text())
-    })
-    .then(() => {
-      fetch(fileInfoXML)
-        .then(response => {
-          zip.file('FileInformation.xml', response.text())
-        })
-        .then(() => {
-          zip.generateAsync({ type: 'base64' }).then(
-            base64 => {
-              saveFile(tuningTable.filename + fileType, base64, 'application/zip;base64,')
-            },
-            err => alert(err)
-          )
-        })
-    })
+  zip.file(fileNameHeader + 'bin', binaryData)
+  zip.file(fileNameHeader + 'info', tuningInfo.documentElement.outerHTML)
+  zip.file('FileInformation.xml', fileInfo.documentElement.outerHTML)
+  zip.generateAsync({ type: 'base64' }).then(
+    base64 => {
+      saveFile(tuningTable.filename + fileType, base64, 'application/zip;base64,')
+    },
+    err => alert(err)
+  )
 
   // success
   return true
