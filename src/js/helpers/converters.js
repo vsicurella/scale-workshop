@@ -7,7 +7,7 @@
 import { LINE_TYPE, SEMITONE_RATIO_IN_12_EDO } from '../constants.js'
 import { model } from '../scaleworkshop.js'
 import { isNil } from './general.js'
-import { isCommaDecimal, isRatio, getLineType } from './types.js'
+import { isCommaDecimal, isRatio, getLineType, isCent } from './types.js'
 import { isEmpty, trim, toString } from './strings.js'
 import { getCF, getConvergent } from './sequences.js'
 import { mathModulo } from './numbers.js'
@@ -78,18 +78,17 @@ function commadecimalToDecimal(rawInput) {
   }
 }
 
-/*
 // convert a decimal (1.25) into commadecimal (1,25)
-function decimal_to_commadecimal(rawInput) {
-  if (isCents(rawInput)) { // a bit misleading
-    const input = rawInput.toString().replace('.', ',');
-    return input;
+function decimalToCommadecimal(rawInput) {
+  if (isCent(rawInput)) {
+    // raw input will look like a cents value
+    const input = rawInput.toString().replace('.', ',')
+    return input
   } else {
-    alert("Invalid input: " + rawInput);
-    return false;
+    alert('Invalid input: ' + rawInput)
+    return false
   }
 }
-*/
 
 // convert a decimal into cents
 function decimalToCents(rawInput) {
@@ -237,6 +236,7 @@ export {
   centsToDecimal,
   ratioToDecimal,
   commadecimalToDecimal,
+  decimalToCommadecimal,
   decimalToCents,
   ratioToCents,
   nOfEdoToDecimal,
