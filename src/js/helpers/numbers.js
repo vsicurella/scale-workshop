@@ -196,15 +196,14 @@ function stackSelf(line, numStacks) {
   if (lineType === LINE_TYPE.DECIMAL) {
     return decimalToCommadecimal(Math.pow(lineToDecimal(line), numStacks))
   } else if (wholeExp && lineType === LINE_TYPE.RATIO) {
-    return line
-      .split('/')
-      .map(x => Math.trunc(Math.pow(parseInt(x), numStacks)))
-      .join('/')
+    const ratio = numStacks >= 0 ? line.split('/') : line.split('/').reverse()
+    return ratio.map(x => Math.trunc(Math.pow(parseInt(x), Math.abs(numStacks)))).join('/')
   } else if (wholeExp && lineType === LINE_TYPE.N_OF_EDO) {
     const [deg, edo] = line.split('\\')
-    return Math.trunc(deg * numStacks) + '\\' + edo
+    return deg + Math.trunc(deg * numStacks) + '\\' + edo
   } else {
-    return lineToCents(line) * numStacks
+    const cents = lineToCents(line)
+    return cents * (1 + numStacks)
   }
 }
 
