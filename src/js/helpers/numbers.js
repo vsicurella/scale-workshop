@@ -6,7 +6,7 @@
 
 import { PRIMES, LINE_TYPE } from '../constants.js'
 import { getLineType } from './types.js'
-import { lineToCents, lineToDecimal } from './converters.js'
+import { lineToCents, lineToDecimal, decimalToCommadecimal } from './converters.js'
 
 function mathModulo(number, modulo) {
   return ((number % modulo) + modulo) % modulo
@@ -180,11 +180,31 @@ function stackLines(line1, line2) {
 
     // If the first line is a decimal type, keep decimals
   } else if (line1Type === LINE_TYPE.DECIMAL) {
-    return lineToDecimal(line1) * lineToDecimal(line2)
+    return decimalToCommadecimal(lineToDecimal(line1) * lineToDecimal(line2))
 
     // All other cases convert to cents
   } else {
     return lineToCents(line1) * lineToCents(line2)
+  }
+}
+
+// stacks an interval on itself. for ratios and decimals, it is a power function
+function stackSelf(line, numStacks) {
+  const lineType = getLineType(line)
+  const wholeExp = numStacks === Math.trunc(numStacks)
+
+  if (lineType === LINE_TYPE.DECIMAL) {
+    return decimalToCommadecimal(Math.pow(lineToDecimal(line), numStacks))
+  } else if (wholeExp && lineType === LINE_TYPE.RATIO) {
+    return line
+      .split('/')
+      .map(x => Math.trunc(Math.pow(parseInt(x), numStacks)))
+      .join('/')
+  } else if (wholeExp && lineType === LINE_TYPE.N_OF_EDO) {
+    const [deg, edo] = line.split('\\')
+    return Math.trunc(deg * numStacks) + '\\' + edo
+  } else {
+    return lineToCents(line) * numStacks
   }
 }
 
@@ -292,6 +312,7 @@ export {
   stackRatios,
   stackNOfEDOs,
   stackLines,
+  stackSelf,
   invertChord,
   getPrimeFactors,
   clamp
