@@ -4,7 +4,9 @@
 
 /* global alert */
 
-import { PRIMES } from '../constants.js'
+import { PRIMES, LINE_TYPE } from '../constants.js'
+import { getLineType } from './types.js'
+import { lineToCents, lineToDecimal } from './converters.js'
 
 function mathModulo(number, modulo) {
   return ((number % modulo) + modulo) % modulo
@@ -84,41 +86,25 @@ function getPrimesOfRatio(numerator, denominator) {
   return [Math.max(nlim, dlim), nlim, dlim]
 }
 
-// returns array of the numerator and denominator of the reduced form of given ratio
-function reduceRatio(numerator, denominator) {
-  const numeratorPrimes = getPrimeFactors(numerator)
-  const denominatorPrimes = getPrimeFactors(denominator)
-  const ratioPrimeFactors = []
-  const maxlength = Math.max(numeratorPrimes.length, denominatorPrimes.length)
-  for (let i = 0; i < maxlength; i++) {
-    let sum = 0
+function getGCD(num1, num2) {
+  if (num1 === 0 || num2 === 0) return num1 + num2
+  else if (num1 === 1 || num2 === 1) return 1
+  else if (num1 === num2) return num1
 
-    if (i < numeratorPrimes.length) {
-      sum = numeratorPrimes[i]
-    }
-
-    if (i < denominatorPrimes.length) {
-      sum -= denominatorPrimes[i]
-    }
-
-    ratioPrimeFactors.push(sum)
-  }
-
-  let nn = 1
-  let dd = 1
-
-  for (let i = 0; i < maxlength; i++) {
-    if (ratioPrimeFactors[i] > 0) {
-      nn *= Math.pow(PRIMES[i], ratioPrimeFactors[i])
-    } else {
-      dd *= Math.pow(PRIMES[i], ratioPrimeFactors[i] * -1)
-    }
-  }
-
-  return [nn, dd]
+  return getGCD(num2, num1 % num2)
 }
 
-function getLCM(array) {
+// TODO: GCD of an array
+
+function getLCM(num1, num2) {
+  if (num1 === 0 || num2 === 0) return 0
+
+  const gcd = getGCD(num1, num2)
+  return Math.trunc((Math.max(num1, num2) / gcd) * Math.min(num1, num2))
+}
+
+// TODO: faster algorithm for LCM of an array
+function getLCMArray(array) {
   const primeCounters = []
   const primeFactors = []
   let f
@@ -155,6 +141,54 @@ function getLCM(array) {
   return lcm
 }
 
+// returns array of the numerator and denominator of the reduced form of given ratio
+function reduceRatio(numerator, denominator) {
+  const gcd = getGCD(numerator, denominator)
+  return [numerator, denominator].map(x => x / gcd)
+}
+
+function reduceRatioString(ratio) {
+  const [n, d] = ratio.split('/').map(x => parseInt(x))
+  return reduceRatio(n, d).join('/')
+}
+
+function stackRatios(ratioStr1, ratioStr2) {
+  const [n1, d1] = ratioStr1.split('/').map(x => parseInt(x))
+  const [n2, d2] = ratioStr2.split('/').map(x => parseInt(x))
+  return reduceRatio(n1 * n2, d1 * d2).join('/')
+}
+
+function stackNOfEDOs(nOfEdo1Str, nOfEdo2Str) {
+  const [deg1, edo1] = nOfEdo1Str.split('\\').map(x => parseInt(x))
+  const [deg2, edo2] = nOfEdo2Str.split('\\').map(x => parseInt(x))
+  const newEdo = getLCM(edo1, edo2)
+  const newDegree = (newEdo / edo1) * deg1 + (newEdo / edo2) * deg2
+  return reduceRatio(newDegree, newEdo).join('\\')
+}
+
+function stackLines(line1, line2) {
+  const line1Type = getLineType(line1)
+  const line2Type = getLineType(line2)
+
+  // If both are ratios, preserve ratio notation
+  if (line1Type === LINE_TYPE.RATIO && line2Type === LINE_TYPE.RATIO) {
+    return stackRatios(line1, line2)
+
+    // If both are N of EDOs, preserve N of EDO notation
+  } else if (line1Type === LINE_TYPE.N_OF_EDO && line2Type === LINE_TYPE.N_OF_EDO) {
+    return stackNOfEDOs(line1, line2)
+
+    // If the first line is a decimal type, keep decimals
+  } else if (line1Type === LINE_TYPE.DECIMAL) {
+    return lineToDecimal(line1) * lineToDecimal(line2)
+
+    // All other cases convert to cents
+  } else {
+    return lineToCents(line1) * lineToCents(line2)
+  }
+}
+
+// TODO: functional improvements
 function invertChord(chordString) {
   if (!/^(\d+:)+\d+$/.test(chordString)) {
     alert('Warning: invalid chord ' + chordString)
@@ -179,7 +213,7 @@ function invertChord(chordString) {
     denominators.push(reducedInterval[1])
   })
 
-  const lcm = getLCM(denominators)
+  const lcm = getLCMArray(denominators)
 
   const newChordString = []
   intervals.forEach(function(x) {
@@ -250,8 +284,14 @@ export {
   getPrimeLimit,
   getPrimeLimitOfRatio,
   getPrimesOfRatio,
-  reduceRatio,
+  getGCD,
   getLCM,
+  getLCMArray,
+  reduceRatio,
+  reduceRatioString,
+  stackRatios,
+  stackNOfEDOs,
+  stackLines,
   invertChord,
   getPrimeFactors,
   clamp
