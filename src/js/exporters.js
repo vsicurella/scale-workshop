@@ -6,7 +6,7 @@ import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/conv
 import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
-import { mathModulo } from './helpers/numbers.js'
+import { mathModulo, stackLines, stackSelf } from './helpers/numbers.js'
 
 function exportError() {
   const tuningTable = model.get('tuning table')
@@ -329,30 +329,92 @@ function exportReferenceDeflemask() {
   return true
 }
 
-function exportReaperNamedNotes() {
+function exportReaperNamedNotes(
+  useScaleData = true,
+  periodSettings = { usePeriodNumbers: true },
+  pitchSettings = { pitchFormat: 'cents' }
+) {
   // This exporter enumerates the scale data to 128 MIDI notes in a readable format
   // that can be loaded into Reaper's piano roll in "Named Note" mode.
+  // 'useScaleData' preserves the notation of each pitch, or convert to a different one if false
+  // 'periodSettings' are for how the period is notated with each pitch
+  //  - 'usePeriodNumbers' if true will put the period (or octave) number by each pitch
+  //    but if false, will calculate the period within each pitch
+  // - 'rootPeriod' can be provided if the root should start on a certain period number
+  // 'pitchSettings' are for how each pitch is converted, if 'useScaleData' is false.
+  //  - 'pitchFormat' can either be 'cents', 'freq', 'decimal', or 'nOfEDO' (the latter assuming the scale data is appropriate)
+  //  - 'centsRoot' is the cent value used for the root note of the scale
 
   if (exportError()) {
     return false
   }
 
-  // TODO: enumeration settings
-  // - use written pitches or convert all to cents/frequencies
-  // - use period numbers or factor period into pitch
-  //    - will need to choose "root" if cents are used
-
-  // use scale data with period numbers
+  // general properties
   const tuningTable = model.get('tuning table')
-  const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
-  const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
+  const period = tuningTable.scale_data.slice(-1)[0]
   const tuningSize = tuningTable.noteCount - 1
 
+  const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
+
+  // set up parameters
+  const usePeriodNumbers = periodSettings.usePeriodNumbers || true
+  const rootPeriod = periodSettings.rootPeriod || 0
+  const pitchFormat = pitchSettings.pitchFormat || 'cents'
+  const centsRoot = pitchSettings.centsRoot || 0
+
+  // start file
   let file = '# MIDI note / CC name map' + newline
-  for (let i = 127; i >= 0; i--) {
-    const rootOffset = i - tuningTable.baseMidiNote
-    const periodNumber = Math.trunc(rootOffset / tuningSize)
-    file += i + ' ' + scaleData[mathModulo(rootOffset, tuningSize)] + '  (' + periodNumber + ')' + newline
+
+  if (useScaleData) {
+    const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
+    for (let i = 127; i >= 0; i--) {
+      const rootOffset = i - tuningTable.baseMidiNote
+      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      const pitchToPrint = usePeriodNumbers
+        ? scaleData[mathModulo(rootOffset, tuningSize)] + '  (' + periodNumber + ')'
+        : stackLines(scaleData[mathModulo(rootOffset, tuningSize)], stackSelf(period, periodNumber))
+
+      file += i + ' ' + pitchToPrint + newline
+    }
+  } else if (pitchFormat !== 'nOfEDO') {
+    let pitchTable
+    switch (pitchFormat) {
+      case 'freq':
+        pitchTable = tuningTable.freq
+        break
+      case 'decimal':
+        pitchTable = tuningTable.decimal
+        break
+      default:
+        pitchTable = tuningTable.cents
+        break
+    }
+
+    for (let i = 127; i >= 0; i--) {
+      const rootOffset = i - tuningTable.baseMidiNote
+      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      let pitchToPrint = pitchTable[i]
+
+      if (pitchFormat === 'cents') {
+        pitchToPrint += centsRoot
+      }
+
+      if (usePeriodNumbers) {
+        pitchToPrint += ' ' + periodNumber
+      }
+
+      file += i + ' ' + pitchToPrint + newline
+    }
+  } else {
+    for (let i = 127; i >= 0; i--) {
+      const rootOffset = i - tuningTable.baseMidiNote
+      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      const pitchToPrint = usePeriodNumbers
+        ? mathModulo(rootOffset, tuningSize) + '\\' + tuningSize + ' (' + periodNumber + ')'
+        : rootOffset + '\\' + tuningSize
+
+      file += i + ' ' + pitchToPrint + newline
+    }
   }
 
   saveFile(tuningTable.filename + '.txt', file)
