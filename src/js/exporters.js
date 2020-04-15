@@ -1,7 +1,7 @@
 /* global alert, MouseEvent, history, jQuery */
 
 import { model, synth } from './scaleworkshop.js'
-import { isNil } from './helpers/general.js'
+import { isNil, roundToNDecimals } from './helpers/general.js'
 import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/converters.js'
 import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
@@ -330,20 +330,18 @@ function exportReferenceDeflemask() {
 }
 
 function exportReaperNamedNotes(
-  useScaleData = true,
-  periodSettings = { usePeriodNumbers: true },
-  pitchSettings = { pitchFormat: 'cents' }
+  pitchSettings = { pitchFormat: 'scale data' },
+  periodSettings = { usePeriodNumbers: true }
 ) {
   // This exporter enumerates the scale data to 128 MIDI notes in a readable format
   // that can be loaded into Reaper's piano roll in "Named Note" mode.
-  // 'useScaleData' preserves the notation of each pitch, or convert to a different one if false
+  // 'pitchSettings' are for how each pitch is notated
+  //  - 'pitchFormat' can either be 'scale data', 'cents', 'freq', 'decimal', or 'degree'
+  //  - 'centsRoot' is the cent value used for the root note of the scale
   // 'periodSettings' are for how the period is notated with each pitch
   //  - 'usePeriodNumbers' if true will put the period (or octave) number by each pitch
   //    but if false, will calculate the period within each pitch
   // - 'rootPeriod' can be provided if the root should start on a certain period number
-  // 'pitchSettings' are for how each pitch is converted, if 'useScaleData' is false.
-  //  - 'pitchFormat' can either be 'cents', 'freq', 'decimal', or 'nOfEDO' (the latter assuming the scale data is appropriate)
-  //  - 'centsRoot' is the cent value used for the root note of the scale
 
   if (exportError()) {
     return false
@@ -357,15 +355,15 @@ function exportReaperNamedNotes(
   const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
 
   // set up parameters
+  const pitchFormat = pitchSettings.pitchFormat || 'scale data'
   const usePeriodNumbers = periodSettings.usePeriodNumbers || true
   const rootPeriod = periodSettings.rootPeriod || 0
-  const pitchFormat = pitchSettings.pitchFormat || 'cents'
   const centsRoot = pitchSettings.centsRoot || 0
 
   // start file
   let file = '# MIDI note / CC name map' + newline
 
-  if (useScaleData) {
+  if (pitchFormat === 'scale data') {
     const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
@@ -376,7 +374,7 @@ function exportReaperNamedNotes(
 
       file += i + ' ' + pitchToPrint + newline
     }
-  } else if (pitchFormat !== 'nOfEDO') {
+  } else if (pitchFormat !== 'degree') {
     let pitchTable
     switch (pitchFormat) {
       case 'freq':
@@ -393,7 +391,7 @@ function exportReaperNamedNotes(
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
       const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      let pitchToPrint = pitchTable[i]
+      let pitchToPrint = roundToNDecimals(6, pitchTable[i])
 
       if (pitchFormat === 'cents') {
         pitchToPrint += centsRoot
