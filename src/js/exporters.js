@@ -369,7 +369,7 @@ function exportReaperNamedNotes(
     const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
       const pitchToPrint = usePeriodNumbers
         ? scaleData[mathModulo(rootOffset, tuningSize)] + '  (' + periodNumber + ')'
         : stackLines(scaleData[mathModulo(rootOffset, tuningSize)], stackSelf(period, periodNumber))
@@ -392,7 +392,7 @@ function exportReaperNamedNotes(
 
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
       let pitchToPrint = pitchTable[i]
 
       if (pitchFormat === 'cents') {
@@ -408,7 +408,7 @@ function exportReaperNamedNotes(
   } else {
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.trunc(rootOffset / tuningSize + rootPeriod)
+      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
       const pitchToPrint = usePeriodNumbers
         ? mathModulo(rootOffset, tuningSize) + '\\' + tuningSize + ' (' + periodNumber + ')'
         : rootOffset + '\\' + tuningSize
