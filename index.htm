@@ -788,6 +788,39 @@
             <a class="social-icons-twitter" href="#" title="Tweet this scale"><span class="socicon-twitter"></span></a>
         </p>
     </div>
+    
+    <div id="modal_reaper_named_notes" class="modal" title="Reaper Named Notes map">
+        <p>Select the options for the note map.</p>
+        <form>
+            <div class="form-group">
+                <label>Pitch Format:</label> 
+                <select id="input_reaper_pitch_format" class="form-control">
+                    <option>Scale Data</option>
+                    <option>Cents</option>    
+                    <option>Frequencies</option>
+                    <option>Decimal Ratio</option>
+                    <option>Scale Degree</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Period options:</label>
+                <div class="radio">
+                    <label><input id="input_reaper_use_period_numbers" type="radio" name="period-format" value="true" checked> Use period number</input></label>
+                </div>
+                <div class="radio">
+                <label><input id="input_reaper_use_calculate_periods" type="radio" name="period-format" value="false"> Calculate period in pitch</input></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Root Period: </label>
+                <input id="input_reaper_root_period" type="number" class="form-control" value="0"></input>
+            </div>
+            <div class="form-group">
+                <label>Root Cents: </label>
+                <input id="input_reaper_root_cents" type="number" class="form-control" value="0.0" disabled></input>
+            </div>
+        </form>
+    </div>
 
     <!-- About Scale Workshop modal -->
     <div id="modal_about_scale_workshop" class="modal text-center" title="About Scale Workshop">
