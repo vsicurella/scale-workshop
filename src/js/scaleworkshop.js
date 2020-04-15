@@ -10,7 +10,8 @@ import {
   getSearchParamAsNumberOr,
   isNil,
   getNewlineSettingsFromBrowser,
-  roundToNDecimals
+  roundToNDecimals,
+  openDialog
 } from './helpers/general.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
@@ -843,6 +844,29 @@ function parseImportedAnamarkTun(event) {
   }
 }
 
+/**
+ * TUNING IMPORT RELATED FUNCTIONS
+ */
+
+// open dialog for Reaper named notes exporter and call with selected parameters
+function openReaperExportDialog() {
+  openDialog('#modal_reaper_named_notes', event => {
+    console.log(event)
+
+    const pitchFormat = jQuery('#input_reaper_pitch_format').val()
+    const usePeriodNumbers = jQuery('input[name="period-format"]:checked').val()
+    const rootPeriodNumber = parseInt(jQuery('#input_reaper_root_period').val())
+    const rootCentsValue = parseFloat(jQuery('#input_reaper_root_cents').val())
+
+    console.log([pitchFormat, usePeriodNumbers, rootPeriodNumber, rootCentsValue])
+
+    exportReaperNamedNotes(
+      { pitchFormat: pitchFormat, centsRoot: rootCentsValue },
+      { usePeriodNumbers: usePeriodNumbers, rootPeriod: rootPeriodNumber }
+    )
+  })
+}
+
 jQuery('#export-buttons').on('click', 'a', e => {
   e.preventDefault()
 
@@ -871,7 +895,7 @@ jQuery('#export-buttons').on('click', 'a', e => {
       exportReferenceDeflemask()
       break
     case 'reaper-named-notes':
-      exportReaperNamedNotes()
+      openReaperExportDialog()
       break
     case 'url':
       exportUrl()
