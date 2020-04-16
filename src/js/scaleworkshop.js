@@ -851,19 +851,15 @@ function parseImportedAnamarkTun(event) {
 // open dialog for Reaper named notes exporter and call with selected parameters
 function openReaperExportDialog() {
   openDialog('#modal_reaper_named_notes', event => {
-    console.log(event)
-
     const pitchFormat = jQuery('#input_reaper_pitch_format').val()
-    const usePeriodNumbers = jQuery('input[name="period-format"]:checked').val()
+    const showPeriodNumbers = jQuery('#input_reaper_show_period_numbers').is(':checked')
+    const calculatePeriodInPitch = jQuery('#input_reaper_calulate_periods').is(':checked')
     const rootPeriodNumber = parseInt(jQuery('#input_reaper_root_period').val())
     const rootCentsValue = parseFloat(jQuery('#input_reaper_root_cents').val())
 
-    console.log([pitchFormat, usePeriodNumbers, rootPeriodNumber, rootCentsValue])
+    console.log([showPeriodNumbers, calculatePeriodInPitch])
 
-    exportReaperNamedNotes(
-      { pitchFormat: pitchFormat, centsRoot: rootCentsValue },
-      { usePeriodNumbers: usePeriodNumbers, rootPeriod: rootPeriodNumber }
-    )
+    exportReaperNamedNotes(pitchFormat, showPeriodNumbers, calculatePeriodInPitch, rootPeriodNumber, rootCentsValue)
   })
 }
 

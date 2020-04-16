@@ -2,7 +2,7 @@
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil, roundToNDecimals } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/converters.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom, lineToCents, lineToDecimal } from './helpers/converters.js'
 import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
@@ -329,19 +329,21 @@ function exportReferenceDeflemask() {
   return true
 }
 
+// TODO: improve with currying?
 function exportReaperNamedNotes(
-  pitchSettings = { pitchFormat: 'scale data' },
-  periodSettings = { usePeriodNumbers: true }
+  pitchFormat = 'scale data',
+  showPeriodNumbers = true,
+  calculatePeriodInPitch = false,
+  rootPeriod = 0,
+  centsRoot = 0
 ) {
   // This exporter enumerates the scale data to 128 MIDI notes in a readable format
   // that can be loaded into Reaper's piano roll in "Named Note" mode.
-  // 'pitchSettings' are for how each pitch is notated
   //  - 'pitchFormat' can either be 'scale data', 'cents', 'freq', 'decimal', or 'degree'
+  //  - 'showPeriodNumbers' if true will put the period (or octave) number by each pitch
+  //  - 'calculatePeriodInPitch' if true will preserve the period value in the pitch value
+  //  - 'rootPeriod' is for if the root should start on a certain period number
   //  - 'centsRoot' is the cent value used for the root note of the scale
-  // 'periodSettings' are for how the period is notated with each pitch
-  //  - 'usePeriodNumbers' if true will put the period (or octave) number by each pitch
-  //    but if false, will calculate the period within each pitch
-  // - 'rootPeriod' can be provided if the root should start on a certain period number
 
   if (exportError()) {
     return false
@@ -354,12 +356,6 @@ function exportReaperNamedNotes(
 
   const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
 
-  // set up parameters
-  const pitchFormat = pitchSettings.pitchFormat || 'scale data'
-  const usePeriodNumbers = periodSettings.usePeriodNumbers || true
-  const rootPeriod = periodSettings.rootPeriod || 0
-  const centsRoot = pitchSettings.centsRoot || 0
-
   // start file
   let file = '# MIDI note / CC name map' + newline
 
@@ -368,23 +364,26 @@ function exportReaperNamedNotes(
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
       const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      const pitchToPrint = usePeriodNumbers
-        ? scaleData[mathModulo(rootOffset, tuningSize)] + '  (' + periodNumber + ')'
+      let pitchToPrint = calculatePeriodInPitch
+        ? scaleData[mathModulo(rootOffset, tuningSize)]
         : stackLines(scaleData[mathModulo(rootOffset, tuningSize)], stackSelf(period, periodNumber))
+      pitchToPrint += showPeriodNumbers ? '  (' + periodNumber + ')' : ''
 
       file += i + ' ' + pitchToPrint + newline
     }
   } else if (pitchFormat !== 'degree') {
-    let pitchTable
+    let pitchTable, periodValue
     switch (pitchFormat) {
       case 'freq':
         pitchTable = tuningTable.freq
         break
       case 'decimal':
         pitchTable = tuningTable.decimal
+        periodValue = lineToDecimal(period)
         break
       default:
         pitchTable = tuningTable.cents
+        periodValue = lineToCents(period)
         break
     }
 
@@ -394,11 +393,17 @@ function exportReaperNamedNotes(
       let pitchToPrint = roundToNDecimals(6, pitchTable[i])
 
       if (pitchFormat === 'cents') {
+        if (!calculatePeriodInPitch) pitchToPrint = pitchToPrint - periodValue * periodNumber
+
         pitchToPrint += centsRoot
       }
 
-      if (usePeriodNumbers) {
-        pitchToPrint += ' ' + periodNumber
+      if (pitchFormat === 'decimal' && !calculatePeriodInPitch) {
+        pitchToPrint = pitchToPrint / Math.pow(periodValue, periodNumber)
+      }
+
+      if (showPeriodNumbers) {
+        pitchToPrint += ' (' + periodNumber + ')'
       }
 
       file += i + ' ' + pitchToPrint + newline
@@ -407,9 +412,10 @@ function exportReaperNamedNotes(
     for (let i = 127; i >= 0; i--) {
       const rootOffset = i - tuningTable.baseMidiNote
       const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      const pitchToPrint = usePeriodNumbers
-        ? mathModulo(rootOffset, tuningSize) + '\\' + tuningSize + ' (' + periodNumber + ')'
+      let pitchToPrint = calculatePeriodInPitch
+        ? mathModulo(rootOffset, tuningSize) + '\\' + tuningSize
         : rootOffset + '\\' + tuningSize
+      pitchToPrint += showPeriodNumbers ? ' (' + periodNumber + ')' : ''
 
       file += i + ' ' + pitchToPrint + newline
     }
