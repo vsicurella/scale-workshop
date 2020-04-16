@@ -907,14 +907,13 @@ jQuery('#scala-file').on('change', parseImportedScalaScl)
 jQuery('#anamark-tun-file').on('change', parseImportedAnamarkTun)
 
 jQuery('#show-mos').on('click', () => {
-  model.set(
-    'staged rank-2 sizes',
-    getValidMOSSizes(
-      lineToDecimal(jQuery('#input_rank-2_period').val()),
-      lineToDecimal(jQuery('#input_rank-2_generator').val()),
-      parseFloat(jQuery('#input_rank-2_mos_threshold').val())
-    )
+  const sizes = getValidMOSSizes(
+    lineToDecimal(jQuery('#input_rank-2_period').val()),
+    lineToDecimal(jQuery('#input_rank-2_generator').val()),
+    parseFloat(jQuery('#input_rank-2_mos_threshold').val())
   )
+  model.set('staged rank-2 sizes', sizes)
+  jQuery('#info_rank_2_mos').text(sizes.join(', '))
 })
 
 jQuery(() => {
