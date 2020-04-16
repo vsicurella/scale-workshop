@@ -400,6 +400,18 @@ jQuery( '#input_rank-2_size' ).on('change',  function() {
   jQuery( '#input_rank-2_down' ).val( 0 );
 } );
 */
+
+  // Reaper Exporter interactions
+  // Disable 'Root Cents Value' if not using cents
+  jQuery('#input_reaper_pitch_format').on('change', function(event) {
+    jQuery('#input_reaper_root_cents').prop('disabled', event.target.value !== 'cents')
+  })
+
+  // Disable 'Root Period Number' if not showing period numbers
+  jQuery('#input_reaper_show_period_numbers').on('click', function(event) {
+    jQuery('#input_reaper_root_period').prop('disabled', !event.target.checked)
+  })
+
   // Touch keyboard (#nav_play) option clicked
   jQuery('#nav_play, #launch-kbd').on('click', function(event) {
     event.preventDefault()
