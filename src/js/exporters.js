@@ -335,7 +335,8 @@ function exportReaperNamedNotes(
   showPeriodNumbers = true,
   calculatePeriodInPitch = false,
   rootPeriod = 0,
-  centsRoot = 0
+  centsRoot = 0,
+  degreeRoot = 0
 ) {
   // This exporter enumerates the scale data to 128 MIDI notes in a readable format
   // that can be loaded into Reaper's piano roll in "Named Note" mode.
@@ -428,7 +429,7 @@ function exportReaperNamedNotes(
     pitchTable = tuningTable.cents
     const degreeLine = (num, table) => {
       const ind = table.length - num - 1
-      let deg = rootOffset(ind)
+      let deg = rootOffset(ind) + degreeRoot
 
       if (!calculatePeriodInPitch) deg = mathModulo(deg, tuningSize)
 

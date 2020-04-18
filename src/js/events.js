@@ -402,9 +402,13 @@ jQuery( '#input_rank-2_size' ).on('change',  function() {
 */
 
   // Reaper Exporter interactions
+
+  // Disable 'Calculate Period In Pitch' if using frequencies
   // Disable 'Root Cents Value' if not using cents
   jQuery('#input_reaper_pitch_format').on('change', function(event) {
-    jQuery('#input_reaper_root_cents').prop('disabled', event.target.value !== 'cents')
+    jQuery('#modal_reaper_root_cents_group').css('display', event.target.value === 'cents' ? 'block' : 'none')
+    jQuery('#modal_reaper_root_degree_group').css('display', event.target.value === 'degree' ? 'block' : 'none')
+    jQuery('#input_reaper_calculate_periods').prop('disabled', event.target.value === 'freq')
   })
 
   // Disable 'Root Period Number' if not showing period numbers
