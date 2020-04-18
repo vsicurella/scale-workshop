@@ -2,7 +2,7 @@
 
 import { model, synth } from './scaleworkshop.js'
 import { isNil, roundToNDecimals } from './helpers/general.js'
-import { decimalToCents, mtof, midiNoteNumberToName, ftom, lineToCents, lineToDecimal } from './helpers/converters.js'
+import { decimalToCents, mtof, midiNoteNumberToName, ftom } from './helpers/converters.js'
 import { LINE_TYPE, APP_TITLE, TUNING_MAX_SIZE, UNIX_NEWLINE, WINDOWS_NEWLINE } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
@@ -356,70 +356,89 @@ function exportReaperNamedNotes(
 
   const newline = model.get('newline') === 'windows' ? WINDOWS_NEWLINE : UNIX_NEWLINE
 
+  // line building functions
+  const prepend = (num, line) => num + ' ' + line
+  const rootOffset = num => num - tuningTable.baseMidiNote
+  const circularIndex = num => mathModulo(rootOffset(num), tuningSize)
+  const periodNumber = num => Math.floor(rootOffset(num) / tuningSize + rootPeriod)
+  const appendPeriodNum = (line, num) => line + ' (' + periodNumber(num) + ')'
+  const calcPeriod = (line, ind) => stackLines(line, stackSelf(period, periodNumber(ind) + rootPeriod))
+  const addCentsRoot = cents => parseFloat(cents) + centsRoot
+
+  let fileFunction, pitchTable
+
   // start file
   let file = '# MIDI note / CC name map' + newline
 
-  if (pitchFormat === 'scale data') {
-    const scaleData = ['1/1', ...tuningTable.scale_data.slice(1, -1)]
-    for (let i = 127; i >= 0; i--) {
-      const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      let pitchToPrint = calculatePeriodInPitch
-        ? scaleData[mathModulo(rootOffset, tuningSize)]
-        : stackLines(scaleData[mathModulo(rootOffset, tuningSize)], stackSelf(period, periodNumber))
-      pitchToPrint += showPeriodNumbers ? '  (' + periodNumber + ')' : ''
+  let pitchLine = (line, ind) => line
+  if (showPeriodNumbers) pitchLine = (line, ind) => appendPeriodNum(line, ind)
 
-      file += i + ' ' + pitchToPrint + newline
+  if (pitchFormat === 'scale data') {
+    const unison = stackSelf(period, 0) // use a 1/1 in the line type of the period
+    pitchTable = [unison, ...tuningTable.scale_data.slice(1, -1)]
+
+    let scalePitch = (line, ind) => pitchLine(line, ind)
+    if (calculatePeriodInPitch) scalePitch = (line, ind) => pitchLine(calcPeriod(line, ind), ind)
+
+    // Iterate over scale data, applying periods if chosen
+    const scaleData = (num, array, table) => {
+      const ind = array.length - num - 1
+      return prepend(ind, scalePitch(table[circularIndex(ind)], ind))
     }
+
+    fileFunction = table => tuningTable.cents.map((x, i, a) => scaleData(i, a, table)).join(newline)
   } else if (pitchFormat !== 'degree') {
-    let pitchTable, periodValue
+    let pitchOffset = (line, ind) => pitchLine(roundToNDecimals(6, parseFloat(line)), ind)
+
+    // assign proper pitch table
     switch (pitchFormat) {
       case 'freq':
         pitchTable = tuningTable.freq
         break
       case 'decimal':
         pitchTable = tuningTable.decimal
-        periodValue = lineToDecimal(period)
         break
       default:
         pitchTable = tuningTable.cents
-        periodValue = lineToCents(period)
+        pitchOffset = (line, ind) => pitchLine(roundToNDecimals(6, addCentsRoot(line)), ind)
         break
     }
 
-    for (let i = 127; i >= 0; i--) {
-      const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      let pitchToPrint = roundToNDecimals(6, pitchTable[i])
-
-      if (pitchFormat === 'cents') {
-        if (!calculatePeriodInPitch) pitchToPrint = pitchToPrint - periodValue * periodNumber
-
-        pitchToPrint += centsRoot
+    // iterate over the first period of the table
+    if (!calculatePeriodInPitch) {
+      const pitchValue = (i, table) => {
+        const ind = table.length - i - 1
+        return prepend(ind, pitchOffset(table[circularIndex(ind) + tuningTable.baseMidiNote], ind))
       }
 
-      if (pitchFormat === 'decimal' && !calculatePeriodInPitch) {
-        pitchToPrint = pitchToPrint / Math.pow(periodValue, periodNumber)
+      fileFunction = table => table.map((x, i, a) => pitchValue(i, a)).join(newline)
+
+      // iterate over the whole table
+    } else {
+      const pitchValue = (i, table) => {
+        const ind = table.length - i - 1
+        return prepend(ind, pitchOffset(table[ind], ind))
       }
 
-      if (showPeriodNumbers) {
-        pitchToPrint += ' (' + periodNumber + ')'
-      }
-
-      file += i + ' ' + pitchToPrint + newline
+      fileFunction = table => table.map((x, i) => pitchValue(i, table)).join(newline)
     }
+
+    // enumerate scale degrees
   } else {
-    for (let i = 127; i >= 0; i--) {
-      const rootOffset = i - tuningTable.baseMidiNote
-      const periodNumber = Math.floor(rootOffset / tuningSize + rootPeriod)
-      let pitchToPrint = calculatePeriodInPitch
-        ? mathModulo(rootOffset, tuningSize) + '\\' + tuningSize
-        : rootOffset + '\\' + tuningSize
-      pitchToPrint += showPeriodNumbers ? ' (' + periodNumber + ')' : ''
+    pitchTable = tuningTable.cents
+    const degreeLine = (num, table) => {
+      const ind = table.length - num - 1
+      let deg = rootOffset(ind)
 
-      file += i + ' ' + pitchToPrint + newline
+      if (!calculatePeriodInPitch) deg = mathModulo(deg, tuningSize)
+
+      return prepend(ind, pitchLine(deg + '\\' + tuningSize, ind))
     }
+
+    fileFunction = table => table.map((x, i) => degreeLine(i, table)).join(newline)
   }
+
+  file += fileFunction(pitchTable)
 
   saveFile(tuningTable.filename + '.txt', file)
 

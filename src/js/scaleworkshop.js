@@ -853,11 +853,9 @@ function openReaperExportDialog() {
   openDialog('#modal_reaper_named_notes', event => {
     const pitchFormat = jQuery('#input_reaper_pitch_format').val()
     const showPeriodNumbers = jQuery('#input_reaper_show_period_numbers').is(':checked')
-    const calculatePeriodInPitch = jQuery('#input_reaper_calulate_periods').is(':checked')
+    const calculatePeriodInPitch = jQuery('#input_reaper_calculate_periods').is(':checked')
     const rootPeriodNumber = parseInt(jQuery('#input_reaper_root_period').val())
     const rootCentsValue = parseFloat(jQuery('#input_reaper_root_cents').val())
-
-    console.log([showPeriodNumbers, calculatePeriodInPitch])
 
     exportReaperNamedNotes(pitchFormat, showPeriodNumbers, calculatePeriodInPitch, rootPeriodNumber, rootCentsValue)
   })
