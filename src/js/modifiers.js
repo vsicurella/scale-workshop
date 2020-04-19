@@ -214,15 +214,7 @@ function modifyMode() {
     }
   }
 
-  // update tuning input field with new tuning
-  jQuery('#txt_tuning_data').val(newTuning)
-
-  parseTuningData()
-
-  jQuery('#modal_modify_mode').dialog('close')
-
-  // success
-  return true
+  return newTuning
 }
 
 // sync beating
@@ -480,11 +472,7 @@ function modifySort() {
 
   sortedTuning = sortedTuning.trim() // remove final newline
 
-  jQuery('#txt_tuning_data').val(sortedTuning)
-  parseTuningData()
-
-  jQuery('#modal_modify_sort').dialog('close')
-  return true
+  return sortedTuning
 }
 
 export {

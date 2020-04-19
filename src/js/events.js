@@ -11,7 +11,8 @@ import {
   trimSelf,
   isTuningDataAvailable,
   isLocalStorageAvailable,
-  closePopup
+  closePopup,
+  openDialogWithPreview
 } from './helpers/general.js'
 import {
   mtof,
@@ -227,7 +228,7 @@ function initEvents() {
       model.set('modify mode mos degrees', getCoprimes(model.get('tuning table').noteCount - 1).slice(1))
       model.set('modify mode type', document.querySelector('input[name="mode_type"]:checked').value)
       jQuery('#input_modify_mode').trigger('select')
-      openDialog('#modal_modify_mode', modifyMode)
+      openDialogWithPreview('#modal_modify_mode', modifyMode)
     } else {
       alert('No tuning data to modify.')
     }
@@ -384,7 +385,7 @@ function initEvents() {
 
   jQuery('#modify_sort').on('click', function(event) {
     event.preventDefault()
-    openDialog('#modal_modify_sort', modifySort)
+    openDialogWithPreview('#modal_modify_sort', modifySort)
   })
 
   /*
