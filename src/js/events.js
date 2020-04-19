@@ -186,25 +186,17 @@ function initEvents() {
   jQuery('#enumerate_chord').on('click', function(event) {
     event.preventDefault()
     jQuery('#input_chord').trigger('select')
-    jQuery('#modal_enumerate_chord').dialog({
-      modal: true,
-      buttons: {
-        OK: function() {
-          try {
-            generateEnumerateChord({
-              rawChord: getString('#input_chord', 'Warning: bad input'),
-              convertToRatios: document.getElementById('input_convert_to_ratios').checked,
-              isInversion: document.getElementById('input_invert_chord').checked
-            })
+    openDialog('#modal_enumerate_chord', () => {
+      try {
+        generateEnumerateChord({
+          rawChord: getString('#input_chord', 'Warning: bad input'),
+          convertToRatios: document.getElementById('input_convert_to_ratios').checked,
+          isInversion: document.getElementById('input_invert_chord').checked
+        })
 
-            closePopup('#modal_enumerate_chord')
-          } catch (e) {
-            alert(e.message)
-          }
-        },
-        Cancel: function() {
-          jQuery(this).dialog('close')
-        }
+        closePopup('#modal_enumerate_chord')
+      } catch (e) {
+        alert(e.message)
       }
     })
   })
