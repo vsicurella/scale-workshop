@@ -1,6 +1,7 @@
 /* global location, jQuery, localStorage, navigator */
 
 import { LOCALSTORAGE_PREFIX } from '../constants.js'
+import { parseTuningData } from '../scaleworkshop.js'
 import { isEmpty } from './strings.js'
 
 function setScaleName(title) {
@@ -84,6 +85,65 @@ function openDialog(el, onOK) {
   })
 }
 
+function openDialogWithPreview(el, onPreview, onOk) {
+  const confirmPreview =
+    onOk ||
+    function() {
+      jQuery('#txt_tuning_data').val(onPreview())
+      parseTuningData()
+      jQuery(this).dialog('close')
+    }
+
+  const element = jQuery(el)
+
+  const modalContainer = jQuery('<div>', {
+    id: 'modal_dialog_with_preview',
+    class: 'modal container'
+  })
+
+  const rowContainer = jQuery('<div>', {
+    id: 'modal_dialog_row',
+    class: 'row'
+  })
+  modalContainer.append(rowContainer)
+
+  const formContainer = jQuery('<div>', {
+    id: 'modal_controls',
+    class: 'col'
+  })
+  formContainer.append(element)
+
+  const previewContainer = jQuery('<div>', {
+    id: 'preview_container',
+    class: 'col'
+  })
+
+  const previewArea = jQuery('<textarea>', {
+    id: 'previewText',
+    class: 'form-control',
+    readonly: 'readonly',
+    rows: 12
+  })
+  previewContainer.append(previewArea)
+
+  rowContainer.append(formContainer).append(previewContainer)
+
+  modalContainer.modal({
+    modal: true,
+    width: 600,
+    buttons: {
+      Preview: function() {
+        previewArea.val(onPreview())
+      },
+      OK: confirmPreview,
+      Cancel: function() {
+        jQuery(this).dialog('close')
+      }
+    }
+    // open: previewArea.val(onPreview())
+  })
+}
+
 // redirect all traffic to https, if not there already
 // source: https://stackoverflow.com/a/4723302/1806628
 function redirectToHTTPS() {
@@ -145,6 +205,7 @@ export {
   getSearchParamAsNumberOr,
   trimSelf,
   openDialog,
+  openDialogWithPreview,
   redirectToHTTPS,
   isLocalStorageAvailable,
   isRunningOnWindows,
