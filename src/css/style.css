@@ -198,6 +198,23 @@ div#splash-center img {
   margin-top: 6px;
 }
 
+.preview-dialog {
+  display: flex;
+  flex-wrap: wrap;
+  place-content: center;
+  justify-content: space-around;
+}
+
+.preview-dialog > div {
+  height: 100%;
+  margin: 5px;
+  padding: 15px;
+  min-width: 220px;
+  max-width: 300px;
+  place-self: center;
+  border: solid 1px #aaa;
+  border-radius: 5px;
+}
 
 /* Virtual keyboard */
 

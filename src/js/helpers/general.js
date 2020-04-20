@@ -98,24 +98,23 @@ function openDialogWithPreview(el, onPreview, onOk) {
 
   const modalContainer = jQuery('<div>', {
     id: 'modal_dialog_with_preview',
-    class: 'modal container'
+    class: 'modal',
+    title: element.prop('title')
   })
 
   const rowContainer = jQuery('<div>', {
     id: 'modal_dialog_row',
-    class: 'row'
+    class: 'preview-dialog'
   })
   modalContainer.append(rowContainer)
 
   const formContainer = jQuery('<div>', {
-    id: 'modal_controls',
-    class: 'col'
+    id: 'modal_controls'
   })
   formContainer.append(element)
 
   const previewContainer = jQuery('<div>', {
-    id: 'preview_container',
-    class: 'col'
+    id: 'preview_container'
   })
 
   const previewArea = jQuery('<textarea>', {
@@ -128,19 +127,28 @@ function openDialogWithPreview(el, onPreview, onOk) {
 
   rowContainer.append(formContainer).append(previewContainer)
 
-  modalContainer.modal({
+  modalContainer.dialog({
     modal: true,
     width: 600,
     buttons: {
       Preview: function() {
-        previewArea.val(onPreview())
+        const val = onPreview()
+        if (val) previewArea.val(onPreview())
       },
       OK: confirmPreview,
       Cancel: function() {
         jQuery(this).dialog('close')
       }
+    },
+    open: function() {
+      element.toggleClass('modal')
+      element.prop('title', '')
+      // previewArea.val(onPreview())
+    },
+    close: function() {
+      element.toggleClass('modal')
+      element.prop('title', modalContainer.prop('title'))
     }
-    // open: previewArea.val(onPreview())
   })
 }
 
