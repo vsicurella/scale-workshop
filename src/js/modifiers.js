@@ -108,15 +108,7 @@ function modifyRandomVariance() {
     }
   }
 
-  // update tuning input field with new tuning
-  jQuery('#txt_tuning_data').val(newTuningLines.join(UNIX_NEWLINE))
-
-  parseTuningData()
-
-  jQuery('#modal_modify_random_variance').dialog('close')
-
-  // success
-  return true
+  return newTuningLines.join(UNIX_NEWLINE)
 }
 
 // mode
@@ -356,14 +348,12 @@ function modifyReplaceWithApproximation() {
       linesToText += lines[index]
       if (index + 1 < array.length) linesToText += newline
     })
-    tuningTextData.value = linesToText
-    parseTuningData()
 
     if (degreeSelected < tuningTable.noteCount - 1) {
       model.set('modify approx degree', degreeSelected + 1)
     }
-    // success
-    return true
+
+    return linesToText
   }
 
   // invalid scale degree

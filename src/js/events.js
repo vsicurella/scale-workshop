@@ -238,20 +238,20 @@ function initEvents() {
   jQuery('#modify_stretch').on('click', function(event) {
     event.preventDefault()
     jQuery('#input_stretch_ratio').trigger('select')
-    openDialog('#modal_modify_stretch', modifyStretch)
+    openDialogWithPreview('#modal_modify_stretch', modifyStretch)
   })
 
   // modifyRandomVariance option clicked
   jQuery('#modify_random_variance').on('click', function(event) {
     event.preventDefault()
     jQuery('#input_cents_max_variance').trigger('select')
-    openDialog('#modal_modify_random_variance', modifyRandomVariance)
+    openDialogWithPreview('#modal_modify_random_variance', modifyRandomVariance)
   })
 
   // modifySyncBeating option clicked
   jQuery('#modify_sync_beating').on('click', function(event) {
     event.preventDefault()
-    openDialog('#modal_modify_sync_beating', modifySyncBeating)
+    openDialogWithPreview('#modal_modify_sync_beating', modifySyncBeating)
   })
 
   // approximate option clicked
@@ -265,7 +265,7 @@ function initEvents() {
     inputScaleDegree.attr({ min: 1, max: model.get('tuning table').noteCount - 1 })
     model.set('modify approx degree', 1)
     inputScaleDegree.select()
-    openDialog('#modal_approximate_intervals', modifyReplaceWithApproximation)
+    openDialogWithPreview('#modal_approximate_intervals', modifyReplaceWithApproximation)
   })
 
   // calculate and list rational approximations within user parameters
