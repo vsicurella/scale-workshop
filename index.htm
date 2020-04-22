@@ -724,51 +724,61 @@
     </div>
 
     <div id="modal_approximate_intervals" class="modal form-group" title="Mode">
-        <p>Select a ratio that approximates the interval.</p>
-        <form>
-            <label>Scale Degree</label>
-            <div class="form-group">
-                <input id="input_scale_degree" name="" type="number" class="form-control" value="1" min="1"
-                    max="128"></input>
+        <div class="modal-flex">
+            <div id="modal_approximate_controls">
+                <p>Select a ratio that approximates the interval.</p>
+                <form>
+                    <label>Scale Degree</label>
+                    <div class="form-group">
+                        <input id="input_scale_degree" name="" type="number" class="form-control" value="1" min="1"
+                            max="128"></input>
+                    </div>
+                    <label>Interval</label>
+                    <div class="form-group">
+                        <input id="input_interval_to_approximate" name="" tyep="number" class="form-control" value=""></input>
+                    </div>
+                    <div class="form-group">
+                        <label>Approximation</label>
+                        <select class="form-control" id="approximation_selection"></select>
+                    </div>
+                    <!-- <div class="form-group" style="display:none;">
+                        <label>
+                            <input id="input_show_convergents" type="checkbox"> Only show convergents</input>
+                        </label>
+                    </div> -->
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Min Error</label>
+                            <input id="input_min_error" name="" type="number" class="form-control" value="0.0" min="0"
+                                max="200.0">cents</input>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Max Error</label>
+                            <input id="input_max_error" name="" type="number" class="form-control" value="15.0" min="1.0"
+                                max="200.0">cents</input>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Min Prime Limit</label>
+                            <input id="input_approx_min_prime" name="" type="number" class="form-control" value="2" min="0"
+                                max="7919"></input>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Max Prime Limit</label>
+                            <input id="input_approx_max_prime" name="" type="number" class="form-control" value="31" min="0"
+                                max="7919"></input>
+                        </div>
+                    </div>
+                </form>
             </div>
-            <label>Interval</label>
-            <div class="form-group">
-                <input id="input_interval_to_approximate" name="" tyep="number" class="form-control" value=""></input>
+            <div id="modal_approximate_interval_list">
+                <p>Select the interval you'd like to approximate.</p>
+                    <div id="modal_approximate_list_group" class="list-group">
+                        <!-- <button type="button" class="list-group-item list-group-item-action" disabled>1/1</button> -->
+                    </div>
             </div>
-            <div class="form-group">
-                <label>Approximation</label>
-                <select class="form-control" id="approximation_selection"></select>
-            </div>
-            <!-- <div class="form-group" style="display:none;">
-                <label>
-                    <input id="input_show_convergents" type="checkbox"> Only show convergents</input>
-                </label>
-            </div> -->
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label>Min Error</label>
-                    <input id="input_min_error" name="" type="number" class="form-control" value="0.0" min="0"
-                        max="200.0">cents</input>
-                </div>
-                <div class="form-group col-md-6">
-                    <label>Max Error</label>
-                    <input id="input_max_error" name="" type="number" class="form-control" value="15.0" min="1.0"
-                        max="200.0">cents</input>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-6">
-                    <label>Min Prime Limit</label>
-                    <input id="input_approx_min_prime" name="" type="number" class="form-control" value="2" min="0"
-                        max="7919"></input>
-                </div>
-                <div class="form-group col-md-6">
-                    <label>Max Prime Limit</label>
-                    <input id="input_approx_max_prime" name="" type="number" class="form-control" value="31" min="0"
-                        max="7919"></input>
-                </div>
-            </div>
-        </form>
+        </div>
     </div>
 
     <div id="modal_modify_sort" class="modal form-group" title="Sort">

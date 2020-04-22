@@ -204,6 +204,22 @@ model.on('change', (key, newValue) => {
     case 'modify mode input':
       jQuery('#input_modify_mode').val(newValue.join(' '))
       break
+    case 'modify approx open':
+      {
+        if (newValue) {
+          model.get('tuning table').scale_data.forEach((line, i, data) => {
+            jQuery('#modal_approximate_list_group').append(
+              jQuery('<button>', {
+                id: 'scaleIntervalSelect' + i,
+                class: 'list-group-item list-group-item-action'
+              }).html(line)
+            )
+          })
+        } else {
+          jQuery('#modal_approximate_list_group').html('')
+        }
+      }
+      break
     case 'modify approx degree':
       jQuery('#input_scale_degree').val(newValue)
       break

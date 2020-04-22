@@ -216,6 +216,16 @@ div#splash-center img {
   border-radius: 5px;
 }
 
+.modal-flex{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.modal-flex > div {
+  border: solid 1px green;
+}
+
 /* Virtual keyboard */
 
 #virtual-keyboard {

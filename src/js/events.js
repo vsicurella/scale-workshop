@@ -260,12 +260,8 @@ function initEvents() {
   jQuery('#modify_approximate').on('click', function(event) {
     event.preventDefault()
     trimSelf('#txt_tuning_data')
-    const inputScaleDegree = jQuery('#input_scale_degree')
-    model.set('modify approx degree', 0) // force update
-    inputScaleDegree.attr({ min: 1, max: model.get('tuning table').noteCount - 1 })
-    model.set('modify approx degree', 1)
-    inputScaleDegree.select()
-    openDialogWithPreview('#modal_approximate_intervals', modifyReplaceWithApproximation)
+    model.set('modify approx open', true)
+    openDialog('#modal_approximate_intervals', modifyReplaceWithApproximation)
   })
 
   // calculate and list rational approximations within user parameters
