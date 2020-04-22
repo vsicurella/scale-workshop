@@ -19,7 +19,7 @@ function isNOfEdo(rawInput) {
   // true, when the input has numbers at the beginning and the end, separated by a single backslash
   // for example: 7\12
   const input = trim(toString(rawInput))
-  return /^\d+\\\d+$/.test(input)
+  return /^[-]?\d+\\\d+$/.test(input)
 }
 
 function isRatio(rawInput) {
