@@ -142,20 +142,20 @@ function getLCMArray(array) {
 }
 
 // returns array of the numerator and denominator of the reduced form of given ratio
-function reduceRatio(numerator, denominator) {
+function simplifyRatio(numerator, denominator) {
   const gcd = getGCD(numerator, denominator)
   return [numerator, denominator].map(x => x / gcd)
 }
 
-function reduceRatioString(ratio) {
+function simplifyRatioString(ratio) {
   const [n, d] = ratio.split('/').map(x => parseInt(x))
-  return reduceRatio(n, d).join('/')
+  return simplifyRatio(n, d).join('/')
 }
 
 function stackRatios(ratioStr1, ratioStr2) {
   const [n1, d1] = ratioStr1.split('/').map(x => parseInt(x))
   const [n2, d2] = ratioStr2.split('/').map(x => parseInt(x))
-  return reduceRatio(n1 * n2, d1 * d2).join('/')
+  return simplifyRatio(n1 * n2, d1 * d2).join('/')
 }
 
 function stackNOfEDOs(nOfEdo1Str, nOfEdo2Str) {
@@ -163,7 +163,7 @@ function stackNOfEDOs(nOfEdo1Str, nOfEdo2Str) {
   const [deg2, edo2] = nOfEdo2Str.split('\\').map(x => parseInt(x))
   const newEdo = getLCM(edo1, edo2)
   const newDegree = (newEdo / edo1) * deg1 + (newEdo / edo2) * deg2
-  return reduceRatio(newDegree, newEdo).join('\\')
+  return simplifyRatio(newDegree, newEdo).join('\\')
 }
 
 function stackLines(line1, line2) {
@@ -227,7 +227,7 @@ function invertChord(chordString) {
 
   const denominators = []
   steps.forEach(function(item, index) {
-    const reducedInterval = reduceRatio(item[0] * intervals[index][0], item[1] * intervals[index][1])
+    const reducedInterval = simplifyRatio(item[0] * intervals[index][0], item[1] * intervals[index][1])
     intervals.push(reducedInterval)
     denominators.push(reducedInterval[1])
   })
@@ -306,8 +306,8 @@ export {
   getGCD,
   getLCM,
   getLCMArray,
-  reduceRatio,
-  reduceRatioString,
+  simplifyRatio,
+  simplifyRatioString,
   stackRatios,
   stackNOfEDOs,
   stackLines,
