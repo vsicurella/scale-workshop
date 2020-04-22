@@ -6,7 +6,13 @@
 
 import { PRIMES, LINE_TYPE } from '../constants.js'
 import { getLineType } from './types.js'
-import { lineToCents, lineToDecimal, decimalToCommadecimal } from './converters.js'
+import { lineToCents, lineToDecimal, decimalToCommadecimal, commadecimalToDecimal } from './converters.js'
+
+const reciprocal = ratioStr =>
+  ratioStr
+    .split('/')
+    .reverse()
+    .join('/')
 
 function mathModulo(number, modulo) {
   return ((number % modulo) + modulo) % modulo
@@ -209,6 +215,34 @@ function stackSelf(line, numStacks) {
   }
 }
 
+function moduloLine(line, modLine) {
+  const numType = getLineType(line)
+  const modType = getLineType(modLine)
+  if (numType === modType) {
+    if (numType === LINE_TYPE.RATIO) {
+      const periods = Math.floor(lineToDecimal(stackRatios(numType, modType)))
+      return stackRatios(numType, stackSelf(modType, -periods))
+    } else if (numType === LINE_TYPE.N_OF_EDO) {
+      const [numDeg, numEdo] = line.split('\\').map(x => parseInt(x))
+      const [modDeg, modEdo] = modLine.slip('\\').map(x => parseInt(x))
+      const lcmEdo = getLCM(numEdo, modEdo)
+      return (((numDeg * lcmEdo) / numEdo) % ((modDeg * lcmEdo) / modEdo)) + '\\' + lcmEdo
+    }
+  } else {
+    if (numType === LINE_TYPE.DECIMAL) {
+      const num = commadecimalToDecimal(line)
+      const mod = lineToDecimal(modLine)
+      const periods = Math.floor(num / mod)
+      return decimalToCommadecimal(num / Math.pow(mod, -periods))
+    } else if (numType === LINE_TYPE.N_OF_EDO && lineToDecimal(modLine) === 2.0) {
+      const [num, mod] = line.split('\\').map(x => parseInt(x))
+      return parseInt(mathModulo(num, mod)) + '\\' + mod
+    } else {
+      return [line, modLine].map(lineToCents).reduce(mathModulo)
+    }
+  }
+}
+
 // TODO: functional improvements
 function invertChord(chordString) {
   if (!/^(\d+:)+\d+$/.test(chordString)) {
@@ -296,6 +330,7 @@ const clamp = (min, max, value) => {
 }
 
 export {
+  reciprocal,
   mathModulo,
   sumOfArray,
   isPrime,
@@ -314,6 +349,7 @@ export {
   stackNOfEDOs,
   stackLines,
   stackSelf,
+  moduloLine,
   invertChord,
   getPrimeFactors,
   clamp
