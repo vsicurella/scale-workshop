@@ -196,7 +196,9 @@ function stackSelf(line, numStacks) {
   if (lineType === LINE_TYPE.DECIMAL) {
     return decimalToCommadecimal(Math.pow(lineToDecimal(line), numStacks))
   } else if (wholeExp && lineType === LINE_TYPE.RATIO) {
-    const ratio = numStacks >= 0 ? line.split('/') : line.split('/').reverse()
+    let ratio = '1/1'
+    if (numStacks > 0) ratio = line.split('/')
+    else if (numStacks < 0) ratio = line.split('/').reverse()
     return ratio.map(x => Math.trunc(Math.pow(parseInt(x), Math.abs(numStacks)))).join('/')
   } else if (wholeExp && lineType === LINE_TYPE.N_OF_EDO) {
     const [deg, edo] = line.split('\\')
