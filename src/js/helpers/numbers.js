@@ -6,7 +6,13 @@
 
 import { PRIMES, LINE_TYPE } from '../constants.js'
 import { getLineType } from './types.js'
-import { lineToCents, lineToDecimal, decimalToCommadecimal, commadecimalToDecimal } from './converters.js'
+import {
+  lineToCents,
+  lineToDecimal,
+  decimalToCommadecimal,
+  commadecimalToDecimal,
+  ratioToDecimal
+} from './converters.js'
 
 const reciprocal = ratioStr =>
   ratioStr
@@ -190,7 +196,8 @@ function stackLines(line1, line2) {
 
     // All other cases convert to cents
   } else {
-    return lineToCents(line1) * lineToCents(line2)
+    const value = lineToCents(line1) + lineToCents(line2)
+    return value.toFixed(6)
   }
 }
 
@@ -205,41 +212,42 @@ function stackSelf(line, numStacks) {
     let ratio = '1/1'
     if (numStacks > 0) ratio = line.split('/')
     else if (numStacks < 0) ratio = line.split('/').reverse()
-    return ratio.map(x => Math.trunc(Math.pow(parseInt(x), Math.abs(numStacks)))).join('/')
+    else return ratio
+    return ratio.map(x => parseInt(Math.pow(x, Math.abs(numStacks)))).join('/')
   } else if (wholeExp && lineType === LINE_TYPE.N_OF_EDO) {
     const [deg, edo] = line.split('\\')
-    return deg + Math.trunc(deg * numStacks) + '\\' + edo
+    return deg * numStacks + '\\' + edo
   } else {
-    const cents = lineToCents(line)
-    return cents * (1 + numStacks)
+    const value = lineToCents(line) * (1 + numStacks)
+    return value.toFixed(6)
   }
 }
 
 function moduloLine(line, modLine) {
   const numType = getLineType(line)
   const modType = getLineType(modLine)
-  if (numType === modType) {
-    if (numType === LINE_TYPE.RATIO) {
-      const periods = Math.floor(lineToDecimal(stackRatios(numType, modType)))
-      return stackRatios(numType, stackSelf(modType, -periods))
-    } else if (numType === LINE_TYPE.N_OF_EDO) {
-      const [numDeg, numEdo] = line.split('\\').map(x => parseInt(x))
-      const [modDeg, modEdo] = modLine.slip('\\').map(x => parseInt(x))
-      const lcmEdo = getLCM(numEdo, modEdo)
-      return (((numDeg * lcmEdo) / numEdo) % ((modDeg * lcmEdo) / modEdo)) + '\\' + lcmEdo
-    }
+
+  if (numType === LINE_TYPE.RATIO && modType === LINE_TYPE.RATIO) {
+    const periods = Math.floor([line, modLine].map(ratioToDecimal).reduce((a, b) => Math.log(a) / Math.log(b)))
+    return stackRatios(line, stackSelf(modLine, -periods))
+  } else if (numType === LINE_TYPE.N_OF_EDO && modType === LINE_TYPE.N_OF_EDO) {
+    const [numDeg, numEdo] = line.split('\\').map(x => parseInt(x))
+    const [modDeg, modEdo] = modLine.slip('\\').map(x => parseInt(x))
+    const lcmEdo = getLCM(numEdo, modEdo)
+    return (((numDeg * lcmEdo) / numEdo) % ((modDeg * lcmEdo) / modEdo)) + '\\' + lcmEdo
+  } else if (numType === LINE_TYPE.DECIMAL) {
+    const num = commadecimalToDecimal(line)
+    const mod = lineToDecimal(modLine)
+    const periods = Math.floor(num / mod)
+    return decimalToCommadecimal(num / Math.pow(mod, -periods))
+  } else if (numType === LINE_TYPE.N_OF_EDO && lineToDecimal(modLine) === 2) {
+    const [num, mod] = line.split('\\').map(x => parseInt(x))
+    return parseInt(mathModulo(num, mod)) + '\\' + mod
   } else {
-    if (numType === LINE_TYPE.DECIMAL) {
-      const num = commadecimalToDecimal(line)
-      const mod = lineToDecimal(modLine)
-      const periods = Math.floor(num / mod)
-      return decimalToCommadecimal(num / Math.pow(mod, -periods))
-    } else if (numType === LINE_TYPE.N_OF_EDO && lineToDecimal(modLine) === 2.0) {
-      const [num, mod] = line.split('\\').map(x => parseInt(x))
-      return parseInt(mathModulo(num, mod)) + '\\' + mod
-    } else {
-      return [line, modLine].map(lineToCents).reduce(mathModulo)
-    }
+    return [line, modLine]
+      .map(lineToCents)
+      .reduce(mathModulo)
+      .toFixed(6)
   }
 }
 
