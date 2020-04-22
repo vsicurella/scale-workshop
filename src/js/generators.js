@@ -6,7 +6,7 @@
 
 import { closePopup, setTuningData, setScaleName } from './helpers/general.js'
 import { lineToDecimal, decimalToRatio, lineToCents, getFloat, getString, getLine } from './helpers/converters.js'
-import { invertChord, mathModulo } from './helpers/numbers.js'
+import { invertChord, stackSelf, moduloLine, stackLines } from './helpers/numbers.js'
 import { UNIX_NEWLINE } from './constants.js'
 import { parseTuningData } from './scaleworkshop.js'
 import { isCent, isNOfEdo } from './helpers/types.js'
@@ -86,7 +86,7 @@ function generateRank2Temperament() {
     return false
   }
 
-  setTuningData(generateRank2TemperamentData(parseFloat(generatorCents), parseFloat(periodCents), size, up))
+  setTuningData(generateRank2TemperamentData(generator, period, size, up))
 
   setScaleName('Rank 2 scale (' + generator + ', ' + period + ')')
 
@@ -102,39 +102,19 @@ function generateRank2TemperamentData(generator, period, size, up) {
   // empty existing tuning data
   let tuningData = ''
 
-  // array aa stores the scale data, starting from 1/1 (0.0 cents)
-  const aa = [0.0]
-  for (let i = 1; i < size; i++) {
-    // calculate generators up
-    if (i <= up) {
-      aa[i] = mathModulo(aa[i - 1] + generator, period)
-      console.log('up: ' + i + ': ' + aa[i])
-    } else {
-      // first down generator
-      if (i === up + 1) {
-        aa[i] = mathModulo(aa[0] - generator, period)
-      }
+  const scale = [moduloLine(stackSelf(generator, up - size + 1), period)]
 
-      // subsequent down generators
-      else {
-        aa[i] = mathModulo(aa[i - 1] - generator, period)
-      }
-      console.log('down: ' + i + ': ' + aa[i])
-    }
+  for (let i = 1; i < size; i++) {
+    scale.push(moduloLine(stackLines(scale[i - 1], generator), period))
   }
 
   // sort the scale ascending
-  aa.sort(function(a, b) {
-    return a - b
-  })
+  scale.sort((a, b) => [a, b].map(lineToDecimal).reduce((a, b) => a - b))
 
   // add the period to the scale
-  aa.push(period)
+  scale.push(period)
 
-  tuningData += aa
-    .slice(1, size + 1)
-    .map(num => num.toFixed(6))
-    .join(UNIX_NEWLINE)
+  tuningData += scale.slice(1, size + 1).join(UNIX_NEWLINE)
 
   return tuningData
 }
