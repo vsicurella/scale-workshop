@@ -11,10 +11,12 @@ import {
   APP_TITLE,
   TUNING_MAX_SIZE,
   UNIX_NEWLINE,
-  WINDOWS_NEWLINE
+  WINDOWS_NEWLINE,
+  MNLG_MAXCENTS
 } from './constants.js'
 import { isEmpty } from './helpers/strings.js'
 import { getLineType } from './helpers/types.js'
+import { mathModulo } from './helpers/numbers.js'
 
 function exportError() {
   const tuningTable = model.get('tuning table')
@@ -355,7 +357,7 @@ function getMnlgtunTuningInfoXML(useScaleFormat, programmer, comment) {
 
 function getMnlgtunFileInfoXML(useScaleFormat, product = 'minilogue') {
   // Builds an XML file necessary for the .mnlgtun file format
-  const rootName = 'KorgMSLibrarianData'
+  const rootName = 'KorgMSLibrarian_Data'
   const xml = document.implementation.createDocument(null, rootName)
 
   const Product = xml.createElement('Product')
@@ -414,19 +416,22 @@ function exportMnlgtun(useScaleFormat) {
   // build cents array for binary conversion
   let centsTable = tuningTable.cents.map(c => c + baseOffsetValue)
 
-  if (!useScaleFormat) {
-    // truncate to 12 notes and normalize if exporting the octave format (.mnlgtuno)
-    centsTable = centsTable.slice(0, MNLG_OCTAVESIZE).map(c => c - centsTable[0])
-  } else {
+  if (useScaleFormat) {
     // ensure table length is exactly 128
     centsTable = centsTable.slice(0, MNLG_SCALESIZE)
 
     // this shouldn't happen unless something goes really wrong
     if (centsTable.length !== MNLG_SCALESIZE) {
-      console.log('Somehow the table was less than 128 values, the end will be padded with 0s.')
+      console.log('Somehow the mnlgtun table was less than 128 values, the end will be padded with 0s.')
       const padding = new Array(MNLG_SCALESIZE - centsTable.length).fill(0)
       centsTable = [...centsTable, ...padding]
     }
+    
+  } else {
+    // normalize around root, truncate to 12 notes, and wrap flattened Cs
+    let cNote = parseInt(tuningTable.baseMidiNote / MNLG_OCTAVESIZE) * MNLG_OCTAVESIZE
+    centsTable = centsTable.slice(cNote, cNote + MNLG_OCTAVESIZE)
+                           .map(cents => mathModulo(cents - MNLG_HZREF.c.int, MNLG_MAXCENTS))
   }
 
   // convert to binary
